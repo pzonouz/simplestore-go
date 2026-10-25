@@ -13,6 +13,8 @@ import (
 func RegisterRoutes(mux *chi.Mux, service services.Service) {
 	routes.RegisterUsersRoutes(mux, service)
 	routes.RegisterCategoriesRoutes(mux, service)
+	routes.RegisterProductsRoutes(mux, service)
+	routes.RegisterFilesRoutes(mux, service)
 
 }
 

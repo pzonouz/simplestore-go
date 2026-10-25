@@ -16,6 +16,27 @@ type Category struct {
 	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
 }
 
+type File struct {
+	ID        pgtype.UUID        `json:"id"`
+	Name      string             `json:"name"`
+	Url       pgtype.Text        `json:"url"`
+	Product   pgtype.UUID        `json:"product"`
+	Category  pgtype.UUID        `json:"category"`
+	CreatedAt pgtype.Timestamptz `json:"createdAt"`
+}
+
+type Product struct {
+	ID          pgtype.UUID        `json:"id"`
+	Name        string             `json:"name"`
+	Description pgtype.Text        `json:"description"`
+	Category    pgtype.UUID        `json:"category"`
+	ImageUrl    pgtype.Text        `json:"imageUrl"`
+	Price       pgtype.Text        `json:"price"`
+	Count       pgtype.Text        `json:"count"`
+	Discount    pgtype.Text        `json:"discount"`
+	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
+}
+
 type User struct {
 	ID          pgtype.UUID        `json:"id"`
 	Email       pgtype.Text        `json:"email"`
