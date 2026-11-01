@@ -8,7 +8,7 @@ run:build
 	./goserver
 	
 start-postgres:
-	docker run -d --rm --name postgres -e POSTGRES_USER=${DATABASE_USERNAME} -p 5432:5432 -e POSTGRES_PASSWORD=${DATABASE_PASSWORD}  -e POSTGRES_DB=${DATABASE_NAME} -e PGDATA=/var/lib/postgresql/data/pgdata -v ${DATABASE_NAME}:/var/lib/postgresql/data postgres:17.11
+	docker run -d --rm --name postgres -e POSTGRES_USER=root -p 5432:5432 -e POSTGRES_PASSWORD=${DATABASE_PASSWORD}  -e POSTGRES_DB="simple_store_go" -e PGDATA=/var/lib/postgresql/data/pgdata -v "simple_store_go":/var/lib/postgresql/data postgres:17.11
 
 stop-postgres:
 	docker stop postgres
