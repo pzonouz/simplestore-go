@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"os"
 	"simplestore_go/internal/routes"
 	"simplestore_go/internal/services"
 
@@ -24,7 +25,7 @@ func Mount(db *pgxpool.Pool, mux *chi.Mux) {
 }
 func DBInit() *pgxpool.Pool {
 	ctx := context.TODO()
-	const dbSource = "postgres://root:secret@localhost:5432/simple_store_go"
+	dbSource := "postgres://root:" + os.Getenv("DATABASE_PASSWORD") + "@localhost:5432/simple_store_go"
 	db, err := pgxpool.New(ctx, dbSource)
 	if err != nil {
 		log.Fatal(err.Error())
