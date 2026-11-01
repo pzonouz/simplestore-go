@@ -25,7 +25,7 @@ func Mount(db *pgxpool.Pool, mux *chi.Mux) {
 }
 func DBInit() *pgxpool.Pool {
 	ctx := context.TODO()
-	dbSource := "postgres://root:" + os.Getenv("DATABASE_PASSWORD") + "@localhost:5432/simple_store_go"
+	dbSource := "postgres://root:" + os.Getenv("DATABASE_PASSWORD") + "@" + os.Getenv("DATABASE_HOST") + ":5432/simple_store_go"
 	db, err := pgxpool.New(ctx, dbSource)
 	if err != nil {
 		log.Fatal(err.Error())
