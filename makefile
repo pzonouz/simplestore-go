@@ -1,5 +1,11 @@
-run:
+dev:
 	air
+
+build:
+	go build -o goserver ./cmd/api/.
+
+run:build
+	./goserver
 	
 start-postgres:
 	docker run -d --rm --name postgres -e POSTGRES_USER=${DATABASE_USERNAME} -p 5432:5432 -e POSTGRES_PASSWORD=${DATABASE_PASSWORD}  -e POSTGRES_DB=${DATABASE_NAME} -e PGDATA=/var/lib/postgresql/data/pgdata -v ${DATABASE_NAME}:/var/lib/postgresql/data postgres:17.11

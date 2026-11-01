@@ -3,7 +3,6 @@ package services
 import (
 	"context"
 	sqlc "simplestore_go/internal/db"
-	"simplestore_go/utils"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
