@@ -37,3 +37,14 @@ func CreateRandomPhoneNumberAsString() string {
 	}
 	return sb.String()
 }
+
+var SlugReplacer = strings.NewReplacer(
+	"\u200c", "", // ZWNJ
+	"\u200d", "", // ZWJ
+	"\u200e", "", // LRM
+	"\u200f", "", // RLM
+)
+
+func NormalizeSlug(s string) string {
+	return SlugReplacer.Replace(s)
+}

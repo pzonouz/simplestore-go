@@ -43,7 +43,7 @@ func RegisterUsersRoutes(mux *chi.Mux, service services.Service) {
 			m.Subject("ایمیل فعالسازی Nanochemshop.ir")
 
 			// 2. Set the HTML body
-			htmlBody := `<html><body><h1>Hello!</h1><p>برای فعالسازی روی </a>لینک<a href="http://localhost/auth/activation/` + user.Token.String + `"> کلیک کنید</p></body></html>`
+			htmlBody := utils.ActivationEmailBody(user, os.Getenv("BASE_URL"))
 			m.SetBodyString(mail.TypeTextHTML, htmlBody)
 
 			// 3. Configure the client (example with a generic SMTP server)

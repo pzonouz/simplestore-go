@@ -143,6 +143,53 @@ func (q *Queries) ListCategories(ctx context.Context, arg ListCategoriesParams) 
 	return items, nil
 }
 
+const noChildrenCategories = `-- name: NoChildrenCategories :many
+SELECT
+    id,
+    name,
+    description,
+    parent,
+    created_at
+FROM
+    categories c
+WHERE
+    NOT EXISTS (
+        SELECT
+            1
+        FROM
+            categories child
+        WHERE
+            child.parent = c.id)
+ORDER BY
+    created_at
+`
+
+func (q *Queries) NoChildrenCategories(ctx context.Context) ([]Category, error) {
+	rows, err := q.db.Query(ctx, noChildrenCategories)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []Category
+	for rows.Next() {
+		var i Category
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Parent,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const updateCategory = `-- name: UpdateCategory :one
 UPDATE
     categories

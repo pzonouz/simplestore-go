@@ -23,6 +23,12 @@ func (s *Service) GetUsers(ctx context.Context) ([]sqlc.User, error) {
 	return users, err
 }
 func (s *Service) CreateUsers(ctx context.Context, args sqlc.CreateUserParams) (sqlc.User, error) {
+	existingUser, err := s.queries.GetUserByEmail(ctx, args.Email)
+	if err == nil {
+		if !existingUser.IsActive.Bool {
+			s.queries.DeleteUser(ctx, existingUser.ID)
+		}
+	}
 	token := (uuid.New()).String()
 	now := time.Now()
 	expiredTime := now.Add(24 * time.Hour)

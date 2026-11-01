@@ -12,20 +12,23 @@ import (
 )
 
 const createProduct = `-- name: CreateProduct :one
-INSERT INTO products(name, description, category, image_url, price, count, discount)
-    VALUES ($1, $2, $3, $4, $5, $6, $7)
+INSERT INTO products(name, description, category, image_url, price, count, discount, slug, packing_type, packing_coefficient_types)
+    VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
 RETURNING
-    id, name, description, category, image_url, price, count, discount, created_at
+    packing_type, packing_coefficient_types, id, name, description, category, image_url, slug, price, count, discount, created_at
 `
 
 type CreateProductParams struct {
-	Name        string      `json:"name"`
-	Description pgtype.Text `json:"description"`
-	Category    pgtype.UUID `json:"category"`
-	ImageUrl    pgtype.Text `json:"imageUrl"`
-	Price       pgtype.Text `json:"price"`
-	Count       pgtype.Text `json:"count"`
-	Discount    pgtype.Text `json:"discount"`
+	Name                    string                   `json:"name"`
+	Description             pgtype.Text              `json:"description"`
+	Category                pgtype.UUID              `json:"category"`
+	ImageUrl                pgtype.Text              `json:"imageUrl"`
+	Price                   pgtype.Text              `json:"price"`
+	Count                   pgtype.Text              `json:"count"`
+	Discount                pgtype.Text              `json:"discount"`
+	Slug                    pgtype.Text              `json:"slug"`
+	PackingType             PackingType              `json:"packingType"`
+	PackingCoefficientTypes []PackingCoefficientType `json:"packingCoefficientTypes"`
 }
 
 func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error) {
@@ -37,14 +40,20 @@ func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (P
 		arg.Price,
 		arg.Count,
 		arg.Discount,
+		arg.Slug,
+		arg.PackingType,
+		arg.PackingCoefficientTypes,
 	)
 	var i Product
 	err := row.Scan(
+		&i.PackingType,
+		&i.PackingCoefficientTypes,
 		&i.ID,
 		&i.Name,
 		&i.Description,
 		&i.Category,
 		&i.ImageUrl,
+		&i.Slug,
 		&i.Price,
 		&i.Count,
 		&i.Discount,
@@ -69,6 +78,12 @@ SELECT
     p.name,
     p.description,
     p.category,
+    p.slug,
+    p.image_url,
+    p.count,
+    p.price,
+    p.packing_type,
+    p.packing_coefficient_types,
     p.created_at,
     c.name AS category_name
 FROM
@@ -80,12 +95,18 @@ LIMIT 1
 `
 
 type GetProductRow struct {
-	ID           pgtype.UUID        `json:"id"`
-	Name         string             `json:"name"`
-	Description  pgtype.Text        `json:"description"`
-	Category     pgtype.UUID        `json:"category"`
-	CreatedAt    pgtype.Timestamptz `json:"createdAt"`
-	CategoryName pgtype.Text        `json:"categoryName"`
+	ID                      pgtype.UUID              `json:"id"`
+	Name                    string                   `json:"name"`
+	Description             pgtype.Text              `json:"description"`
+	Category                pgtype.UUID              `json:"category"`
+	Slug                    pgtype.Text              `json:"slug"`
+	ImageUrl                pgtype.Text              `json:"imageUrl"`
+	Count                   pgtype.Text              `json:"count"`
+	Price                   pgtype.Text              `json:"price"`
+	PackingType             PackingType              `json:"packingType"`
+	PackingCoefficientTypes []PackingCoefficientType `json:"packingCoefficientTypes"`
+	CreatedAt               pgtype.Timestamptz       `json:"createdAt"`
+	CategoryName            pgtype.Text              `json:"categoryName"`
 }
 
 func (q *Queries) GetProduct(ctx context.Context, id pgtype.UUID) (GetProductRow, error) {
@@ -96,6 +117,69 @@ func (q *Queries) GetProduct(ctx context.Context, id pgtype.UUID) (GetProductRow
 		&i.Name,
 		&i.Description,
 		&i.Category,
+		&i.Slug,
+		&i.ImageUrl,
+		&i.Count,
+		&i.Price,
+		&i.PackingType,
+		&i.PackingCoefficientTypes,
+		&i.CreatedAt,
+		&i.CategoryName,
+	)
+	return i, err
+}
+
+const getProductBySlug = `-- name: GetProductBySlug :one
+SELECT
+    p.id,
+    p.name,
+    p.description,
+    p.category,
+    p.slug,
+    p.image_url,
+    p.count,
+    p.price,
+    p.packing_type,
+    p.packing_coefficient_types,
+    p.created_at,
+    c.name AS category_name
+FROM
+    products AS p
+    LEFT JOIN categories AS c ON p.category = c.id
+WHERE
+    p.slug = $1
+LIMIT 1
+`
+
+type GetProductBySlugRow struct {
+	ID                      pgtype.UUID              `json:"id"`
+	Name                    string                   `json:"name"`
+	Description             pgtype.Text              `json:"description"`
+	Category                pgtype.UUID              `json:"category"`
+	Slug                    pgtype.Text              `json:"slug"`
+	ImageUrl                pgtype.Text              `json:"imageUrl"`
+	Count                   pgtype.Text              `json:"count"`
+	Price                   pgtype.Text              `json:"price"`
+	PackingType             PackingType              `json:"packingType"`
+	PackingCoefficientTypes []PackingCoefficientType `json:"packingCoefficientTypes"`
+	CreatedAt               pgtype.Timestamptz       `json:"createdAt"`
+	CategoryName            pgtype.Text              `json:"categoryName"`
+}
+
+func (q *Queries) GetProductBySlug(ctx context.Context, slug pgtype.Text) (GetProductBySlugRow, error) {
+	row := q.db.QueryRow(ctx, getProductBySlug, slug)
+	var i GetProductBySlugRow
+	err := row.Scan(
+		&i.ID,
+		&i.Name,
+		&i.Description,
+		&i.Category,
+		&i.Slug,
+		&i.ImageUrl,
+		&i.Count,
+		&i.Price,
+		&i.PackingType,
+		&i.PackingCoefficientTypes,
 		&i.CreatedAt,
 		&i.CategoryName,
 	)
@@ -108,6 +192,12 @@ SELECT
     p.name,
     p.description,
     p.category,
+    p.slug,
+    p.image_url,
+    p.count,
+    p.price,
+    p.packing_type,
+    p.packing_coefficient_types,
     p.created_at,
     c.name AS category_name
 FROM
@@ -124,12 +214,18 @@ type ListProductsParams struct {
 }
 
 type ListProductsRow struct {
-	ID           pgtype.UUID        `json:"id"`
-	Name         string             `json:"name"`
-	Description  pgtype.Text        `json:"description"`
-	Category     pgtype.UUID        `json:"category"`
-	CreatedAt    pgtype.Timestamptz `json:"createdAt"`
-	CategoryName pgtype.Text        `json:"categoryName"`
+	ID                      pgtype.UUID              `json:"id"`
+	Name                    string                   `json:"name"`
+	Description             pgtype.Text              `json:"description"`
+	Category                pgtype.UUID              `json:"category"`
+	Slug                    pgtype.Text              `json:"slug"`
+	ImageUrl                pgtype.Text              `json:"imageUrl"`
+	Count                   pgtype.Text              `json:"count"`
+	Price                   pgtype.Text              `json:"price"`
+	PackingType             PackingType              `json:"packingType"`
+	PackingCoefficientTypes []PackingCoefficientType `json:"packingCoefficientTypes"`
+	CreatedAt               pgtype.Timestamptz       `json:"createdAt"`
+	CategoryName            pgtype.Text              `json:"categoryName"`
 }
 
 func (q *Queries) ListProducts(ctx context.Context, arg ListProductsParams) ([]ListProductsRow, error) {
@@ -146,6 +242,12 @@ func (q *Queries) ListProducts(ctx context.Context, arg ListProductsParams) ([]L
 			&i.Name,
 			&i.Description,
 			&i.Category,
+			&i.Slug,
+			&i.ImageUrl,
+			&i.Count,
+			&i.Price,
+			&i.PackingType,
+			&i.PackingCoefficientTypes,
 			&i.CreatedAt,
 			&i.CategoryName,
 		); err != nil {
@@ -169,22 +271,28 @@ SET
     image_url = $5,
     price = $6,
     count = $7,
-    discount = $8
+    discount = $8,
+    slug = $9,
+    packing_type = $10,
+    packing_coefficient_types = $11
 WHERE
     id = $1
 RETURNING
-    id, name, description, category, image_url, price, count, discount, created_at
+    packing_type, packing_coefficient_types, id, name, description, category, image_url, slug, price, count, discount, created_at
 `
 
 type UpdateProductParams struct {
-	ID          pgtype.UUID `json:"id"`
-	Name        string      `json:"name"`
-	Description pgtype.Text `json:"description"`
-	Category    pgtype.UUID `json:"category"`
-	ImageUrl    pgtype.Text `json:"imageUrl"`
-	Price       pgtype.Text `json:"price"`
-	Count       pgtype.Text `json:"count"`
-	Discount    pgtype.Text `json:"discount"`
+	ID                      pgtype.UUID              `json:"id"`
+	Name                    string                   `json:"name"`
+	Description             pgtype.Text              `json:"description"`
+	Category                pgtype.UUID              `json:"category"`
+	ImageUrl                pgtype.Text              `json:"imageUrl"`
+	Price                   pgtype.Text              `json:"price"`
+	Count                   pgtype.Text              `json:"count"`
+	Discount                pgtype.Text              `json:"discount"`
+	Slug                    pgtype.Text              `json:"slug"`
+	PackingType             PackingType              `json:"packingType"`
+	PackingCoefficientTypes []PackingCoefficientType `json:"packingCoefficientTypes"`
 }
 
 func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (Product, error) {
@@ -197,14 +305,20 @@ func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (P
 		arg.Price,
 		arg.Count,
 		arg.Discount,
+		arg.Slug,
+		arg.PackingType,
+		arg.PackingCoefficientTypes,
 	)
 	var i Product
 	err := row.Scan(
+		&i.PackingType,
+		&i.PackingCoefficientTypes,
 		&i.ID,
 		&i.Name,
 		&i.Description,
 		&i.Category,
 		&i.ImageUrl,
+		&i.Slug,
 		&i.Price,
 		&i.Count,
 		&i.Discount,

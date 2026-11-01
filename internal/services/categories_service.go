@@ -36,3 +36,6 @@ func (s *Service) UpdateCategory(ctx context.Context, args sqlc.UpdateCategoryPa
 func (s *Service) DeleteCategory(ctx context.Context, id pgtype.UUID) error {
 	return s.queries.DeleteCategory(ctx, id)
 }
+func (s *Service) NoChildrenCategories(ctx context.Context) ([]sqlc.Category, error) {
+	return s.queries.NoChildrenCategories(ctx)
+}

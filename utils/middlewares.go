@@ -35,7 +35,7 @@ func AdminMiddleware(next http.Handler) http.Handler {
 		}, jwt.WithValidMethods([]string{"HS256"}), jwt.WithIssuer("nanochemshop"), jwt.WithExpirationRequired())
 		if err != nil {
 			log.Println(err.Error())
-			http.Error(w, fmt.Errorf("").Error(), http.StatusInternalServerError)
+			http.Error(w, "", http.StatusUnauthorized)
 			return
 		}
 		if !claims.Is_admin || !token.Valid {
@@ -44,9 +44,6 @@ func AdminMiddleware(next http.Handler) http.Handler {
 		}
 		ctx := context.WithValue(r.Context(), "user", &claims.UserInfo)
 		next.ServeHTTP(w, r.WithContext(ctx))
-
-		// 3. Logic to run AFTER the handler has finished
-		//    (e.g., timing the request, cleaning up)
 	})
 }
 func AdminOrReadOnlyMiddleware(next http.Handler) http.Handler {
@@ -76,9 +73,6 @@ func AdminOrReadOnlyMiddleware(next http.Handler) http.Handler {
 		}
 		ctx := context.WithValue(r.Context(), "user", &claims.UserInfo)
 		next.ServeHTTP(w, r.WithContext(ctx))
-
-		// 3. Logic to run AFTER the handler has finished
-		//    (e.g., timing the request, cleaning up)
 	})
 }
 
@@ -106,8 +100,5 @@ func AuthenticatedMiddleware(next http.Handler) http.Handler {
 		}
 		ctx := context.WithValue(r.Context(), "user", &claims.UserInfo)
 		next.ServeHTTP(w, r.WithContext(ctx))
-
-		// 3. Logic to run AFTER the handler has finished
-		//    (e.g., timing the request, cleaning up)
 	})
 }

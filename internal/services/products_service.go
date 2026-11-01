@@ -2,15 +2,14 @@ package services
 
 import (
 	"context"
-	"fmt"
 	sqlc "simplestore_go/internal/db"
+	"simplestore_go/utils"
 
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
 func (s *Service) GetProducts(ctx context.Context, args sqlc.ListProductsParams) ([]sqlc.ListProductsRow, error) {
 	Products, err := s.queries.ListProducts(ctx, args)
-	fmt.Println(err)
 	if err != nil {
 		return []sqlc.ListProductsRow{}, err
 	}
@@ -27,11 +26,21 @@ func (s *Service) GetProduct(ctx context.Context, id pgtype.UUID) (sqlc.GetProdu
 	}
 	return Product, err
 }
+func (s *Service) GetProductBySlug(ctx context.Context, slug pgtype.Text) (sqlc.GetProductBySlugRow, error) {
+
+	Product, err := s.queries.GetProductBySlug(ctx, slug)
+	if err != nil {
+		return sqlc.GetProductBySlugRow{}, err
+	}
+	return Product, err
+}
 
 func (s *Service) CreateProduct(ctx context.Context, args sqlc.CreateProductParams) (sqlc.Product, error) {
+	// args.Description.String = utils.NormalizeSlug(args.Description.String)
 	return s.queries.CreateProduct(ctx, args)
 }
 func (s *Service) UpdateProduct(ctx context.Context, args sqlc.UpdateProductParams) (sqlc.Product, error) {
+	// args.Description.String = utils.NormalizeSlug(args.Description.String)
 	return s.queries.UpdateProduct(ctx, args)
 }
 func (s *Service) DeleteProduct(ctx context.Context, id pgtype.UUID) error {

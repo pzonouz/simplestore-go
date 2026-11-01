@@ -2,7 +2,6 @@ package routes
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	sqlc "simplestore_go/internal/db"
 	"simplestore_go/internal/services"
@@ -35,6 +34,20 @@ func RegisterCategoriesRoutes(mux *chi.Mux, service services.Service) {
 				return
 			}
 		})
+		r.Get("/no_children_categories", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			var categories []sqlc.Category
+			categories, err := service.NoChildrenCategories(r.Context())
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			err = json.NewEncoder(w).Encode(categories)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		})
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			var categories []sqlc.ListCategoriesRow
@@ -57,7 +70,6 @@ func RegisterCategoriesRoutes(mux *chi.Mux, service services.Service) {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			fmt.Print(category)
 			_, err = service.CreateCategory(r.Context(), category)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
@@ -75,7 +87,6 @@ func RegisterCategoriesRoutes(mux *chi.Mux, service services.Service) {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			category.ID = uuidId
 			err = json.NewDecoder(r.Body).Decode(&category)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)

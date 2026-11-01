@@ -1,7 +1,28 @@
+CREATE TYPE packing_type AS ENUM(
+    'Quantity',
+    'Volume',
+    'Weight'
+);
+
+CREATE TABLE "products"(
+    "packing_type" packing_type NOT NULL DEFAULT ('Quantity'),
+    "packing_coefficient_types" text[] NOT NULL DEFAULT ARRAY['1'],
+    "id" uuid PRIMARY KEY DEFAULT (gen_random_uuid()),
+    "name" varchar UNIQUE NOT NULL,
+    "description" text,
+    "category" uuid,
+    "image_url" text,
+    "slug" varchar,
+    "price" varchar DEFAULT '0',
+    "count" varchar DEFAULT '0',
+    "discount" varchar(4),
+    "created_at" timestamptz NOT NULL DEFAULT (now())
+);
+
 CREATE TABLE "users"(
     "id" uuid PRIMARY KEY DEFAULT (gen_random_uuid()),
-    "email" varchar,
-    "phone_number" varchar(20),
+    "email" varchar UNIQUE,
+    "phone_number" varchar(20) UNIQUE,
     "expired_time" timestamptz,
     "password" text NOT NULL,
     "token" text,
@@ -16,19 +37,6 @@ CREATE TABLE "categories"(
     "name" varchar UNIQUE NOT NULL,
     "description" text,
     "parent" uuid,
-    "created_at" timestamptz NOT NULL DEFAULT (now())
-);
-
-CREATE TABLE "products"(
-    "id" uuid PRIMARY KEY DEFAULT (gen_random_uuid()),
-    "name" varchar UNIQUE NOT NULL,
-    "description" text,
-    "category" uuid,
-    "image_url" text,
-    "slug" varchar,
-    "price" varchar DEFAULT '0',
-    "count" varchar DEFAULT '0',
-    "discount" varchar(4),
     "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 

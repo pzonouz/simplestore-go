@@ -28,6 +28,26 @@ ORDER BY
     c.created_at
 LIMIT $1 OFFSET $2;
 
+-- name: NoChildrenCategories :many
+SELECT
+    id,
+    name,
+    description,
+    parent,
+    created_at
+FROM
+    categories c
+WHERE
+    NOT EXISTS (
+        SELECT
+            1
+        FROM
+            categories child
+        WHERE
+            child.parent = c.id)
+ORDER BY
+    created_at;
+
 -- name: CreateCategory :one
 INSERT INTO categories(name, parent, description)
     VALUES ($1, $2, $3)

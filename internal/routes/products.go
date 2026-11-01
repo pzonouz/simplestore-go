@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	sqlc "simplestore_go/internal/db"
 	"simplestore_go/internal/services"
 	"simplestore_go/utils"
@@ -24,6 +25,27 @@ func RegisterProductsRoutes(mux *chi.Mux, service services.Service) {
 				return
 			}
 			product, err := service.GetProduct(r.Context(), uuidId)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+			err = json.NewEncoder(w).Encode(product)
+			w.WriteHeader(http.StatusCreated)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+		})
+		r.Get("/by_slug/{slug}", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			slugRaw := chi.URLParam(r, "slug")
+
+			slug, err := url.PathUnescape(slugRaw)
+			if err != nil {
+				http.Error(w, "invalid slug encoding", http.StatusBadRequest)
+				return
+			}
+			product, err := service.GetProductBySlug(r.Context(), pgtype.Text{String: slug, Valid: true})
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
