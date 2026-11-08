@@ -3,7 +3,6 @@ package utils
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 	"os"
 
@@ -34,7 +33,6 @@ func AdminMiddleware(next http.Handler) http.Handler {
 			return []byte(JWT_SECRET), nil
 		}, jwt.WithValidMethods([]string{"HS256"}), jwt.WithIssuer("nanochemshop"), jwt.WithExpirationRequired())
 		if err != nil {
-			log.Println(err.Error())
 			http.Error(w, "", http.StatusUnauthorized)
 			return
 		}
@@ -90,7 +88,6 @@ func AuthenticatedMiddleware(next http.Handler) http.Handler {
 			return []byte(JWT_SECRET), nil
 		}, jwt.WithValidMethods([]string{"HS256"}), jwt.WithIssuer("nanochemshop"), jwt.WithExpirationRequired())
 		if err != nil {
-			log.Println(err.Error())
 			http.Error(w, fmt.Errorf("").Error(), http.StatusInternalServerError)
 			return
 		}

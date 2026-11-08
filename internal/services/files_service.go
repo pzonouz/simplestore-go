@@ -2,9 +2,8 @@ package services
 
 import (
 	"context"
-	"fmt"
+	"encoding/json"
 	"io"
-	"log"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -22,7 +21,6 @@ func (s *Service) FileUpload(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return
 	}
-	log.Println("Here")
 	file, header, err := r.FormFile("file")
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
@@ -43,11 +41,20 @@ func (s *Service) FileUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	w.WriteHeader(http.StatusCreated)
-	fmt.Fprintf(w, "%s", dst.Name())
+	type UploadReturnData struct {
+		Url string `json:"url"`
+	}
+	data := UploadReturnData{
+		Url: dst.Name(),
+	}
+	err = json.NewEncoder(w).Encode(data)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
 }
 func (s *Service) GetFiles(ctx context.Context, args sqlc.ListFilesParams) ([]sqlc.ListFilesRow, error) {
 	Files, err := s.queries.ListFiles(ctx, args)
-	fmt.Println(err)
 	if err != nil {
 		return []sqlc.ListFilesRow{}, err
 	}

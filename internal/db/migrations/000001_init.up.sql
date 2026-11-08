@@ -6,15 +6,15 @@ CREATE TYPE packing_type AS ENUM(
 
 CREATE TABLE "products"(
     "packing_type" packing_type NOT NULL DEFAULT ('Quantity'),
-    "packing_coefficient_types" text[] NOT NULL DEFAULT ARRAY['1'],
+    "packing_coefficient_types" NUMERIC[] NOT NULL DEFAULT ARRAY[1],
     "id" uuid PRIMARY KEY DEFAULT (gen_random_uuid()),
     "name" varchar UNIQUE NOT NULL,
     "description" text,
     "category" uuid,
     "image_url" text,
     "slug" varchar,
-    "price" varchar DEFAULT '0',
-    "count" varchar DEFAULT '0',
+    "price" NUMERIC  DEFAULT 0,
+    "count" NUMERIC DEFAULT 0,
     "discount" varchar(4),
     "created_at" timestamptz NOT NULL DEFAULT (now())
 );

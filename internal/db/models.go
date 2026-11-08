@@ -11,50 +11,6 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
-type PackingCoefficientType string
-
-const (
-	PackingCoefficientType1       PackingCoefficientType = "1"
-	PackingCoefficientType100     PackingCoefficientType = "100"
-	PackingCoefficientType1000    PackingCoefficientType = "1000"
-	PackingCoefficientType1000000 PackingCoefficientType = "1000000"
-)
-
-func (e *PackingCoefficientType) Scan(src interface{}) error {
-	switch s := src.(type) {
-	case []byte:
-		*e = PackingCoefficientType(s)
-	case string:
-		*e = PackingCoefficientType(s)
-	default:
-		return fmt.Errorf("unsupported scan type for PackingCoefficientType: %T", src)
-	}
-	return nil
-}
-
-type NullPackingCoefficientType struct {
-	PackingCoefficientType PackingCoefficientType `json:"packingCoefficientType"`
-	Valid                  bool                   `json:"valid"` // Valid is true if PackingCoefficientType is not NULL
-}
-
-// Scan implements the Scanner interface.
-func (ns *NullPackingCoefficientType) Scan(value interface{}) error {
-	if value == nil {
-		ns.PackingCoefficientType, ns.Valid = "", false
-		return nil
-	}
-	ns.Valid = true
-	return ns.PackingCoefficientType.Scan(value)
-}
-
-// Value implements the driver Valuer interface.
-func (ns NullPackingCoefficientType) Value() (driver.Value, error) {
-	if !ns.Valid {
-		return nil, nil
-	}
-	return string(ns.PackingCoefficientType), nil
-}
-
 type PackingType string
 
 const (
@@ -116,18 +72,18 @@ type File struct {
 }
 
 type Product struct {
-	PackingType             PackingType              `json:"packingType"`
-	PackingCoefficientTypes []PackingCoefficientType `json:"packingCoefficientTypes"`
-	ID                      pgtype.UUID              `json:"id"`
-	Name                    string                   `json:"name"`
-	Description             pgtype.Text              `json:"description"`
-	Category                pgtype.UUID              `json:"category"`
-	ImageUrl                pgtype.Text              `json:"imageUrl"`
-	Slug                    pgtype.Text              `json:"slug"`
-	Price                   pgtype.Text              `json:"price"`
-	Count                   pgtype.Text              `json:"count"`
-	Discount                pgtype.Text              `json:"discount"`
-	CreatedAt               pgtype.Timestamptz       `json:"createdAt"`
+	PackingType             PackingType        `json:"packingType"`
+	PackingCoefficientTypes []pgtype.Numeric   `json:"packingCoefficientTypes"`
+	ID                      pgtype.UUID        `json:"id"`
+	Name                    string             `json:"name"`
+	Description             pgtype.Text        `json:"description"`
+	Category                pgtype.UUID        `json:"category"`
+	ImageUrl                pgtype.Text        `json:"imageUrl"`
+	Slug                    pgtype.Text        `json:"slug"`
+	Price                   pgtype.Numeric     `json:"price"`
+	Count                   pgtype.Numeric     `json:"count"`
+	Discount                pgtype.Text        `json:"discount"`
+	CreatedAt               pgtype.Timestamptz `json:"createdAt"`
 }
 
 type User struct {

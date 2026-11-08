@@ -2,7 +2,6 @@ package routes
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
 	sqlc "simplestore_go/internal/db"
@@ -79,7 +78,6 @@ func RegisterProductsRoutes(mux *chi.Mux, service services.Service) {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			fmt.Print(product)
 			_, err = service.CreateProduct(r.Context(), product)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)

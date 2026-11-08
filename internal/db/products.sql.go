@@ -19,16 +19,16 @@ RETURNING
 `
 
 type CreateProductParams struct {
-	Name                    string                   `json:"name"`
-	Description             pgtype.Text              `json:"description"`
-	Category                pgtype.UUID              `json:"category"`
-	ImageUrl                pgtype.Text              `json:"imageUrl"`
-	Price                   pgtype.Text              `json:"price"`
-	Count                   pgtype.Text              `json:"count"`
-	Discount                pgtype.Text              `json:"discount"`
-	Slug                    pgtype.Text              `json:"slug"`
-	PackingType             PackingType              `json:"packingType"`
-	PackingCoefficientTypes []PackingCoefficientType `json:"packingCoefficientTypes"`
+	Name                    string           `json:"name"`
+	Description             pgtype.Text      `json:"description"`
+	Category                pgtype.UUID      `json:"category"`
+	ImageUrl                pgtype.Text      `json:"imageUrl"`
+	Price                   pgtype.Numeric   `json:"price"`
+	Count                   pgtype.Numeric   `json:"count"`
+	Discount                pgtype.Text      `json:"discount"`
+	Slug                    pgtype.Text      `json:"slug"`
+	PackingType             PackingType      `json:"packingType"`
+	PackingCoefficientTypes []pgtype.Numeric `json:"packingCoefficientTypes"`
 }
 
 func (q *Queries) CreateProduct(ctx context.Context, arg CreateProductParams) (Product, error) {
@@ -95,18 +95,18 @@ LIMIT 1
 `
 
 type GetProductRow struct {
-	ID                      pgtype.UUID              `json:"id"`
-	Name                    string                   `json:"name"`
-	Description             pgtype.Text              `json:"description"`
-	Category                pgtype.UUID              `json:"category"`
-	Slug                    pgtype.Text              `json:"slug"`
-	ImageUrl                pgtype.Text              `json:"imageUrl"`
-	Count                   pgtype.Text              `json:"count"`
-	Price                   pgtype.Text              `json:"price"`
-	PackingType             PackingType              `json:"packingType"`
-	PackingCoefficientTypes []PackingCoefficientType `json:"packingCoefficientTypes"`
-	CreatedAt               pgtype.Timestamptz       `json:"createdAt"`
-	CategoryName            pgtype.Text              `json:"categoryName"`
+	ID                      pgtype.UUID        `json:"id"`
+	Name                    string             `json:"name"`
+	Description             pgtype.Text        `json:"description"`
+	Category                pgtype.UUID        `json:"category"`
+	Slug                    pgtype.Text        `json:"slug"`
+	ImageUrl                pgtype.Text        `json:"imageUrl"`
+	Count                   pgtype.Numeric     `json:"count"`
+	Price                   pgtype.Numeric     `json:"price"`
+	PackingType             PackingType        `json:"packingType"`
+	PackingCoefficientTypes []pgtype.Numeric   `json:"packingCoefficientTypes"`
+	CreatedAt               pgtype.Timestamptz `json:"createdAt"`
+	CategoryName            pgtype.Text        `json:"categoryName"`
 }
 
 func (q *Queries) GetProduct(ctx context.Context, id pgtype.UUID) (GetProductRow, error) {
@@ -152,18 +152,18 @@ LIMIT 1
 `
 
 type GetProductBySlugRow struct {
-	ID                      pgtype.UUID              `json:"id"`
-	Name                    string                   `json:"name"`
-	Description             pgtype.Text              `json:"description"`
-	Category                pgtype.UUID              `json:"category"`
-	Slug                    pgtype.Text              `json:"slug"`
-	ImageUrl                pgtype.Text              `json:"imageUrl"`
-	Count                   pgtype.Text              `json:"count"`
-	Price                   pgtype.Text              `json:"price"`
-	PackingType             PackingType              `json:"packingType"`
-	PackingCoefficientTypes []PackingCoefficientType `json:"packingCoefficientTypes"`
-	CreatedAt               pgtype.Timestamptz       `json:"createdAt"`
-	CategoryName            pgtype.Text              `json:"categoryName"`
+	ID                      pgtype.UUID        `json:"id"`
+	Name                    string             `json:"name"`
+	Description             pgtype.Text        `json:"description"`
+	Category                pgtype.UUID        `json:"category"`
+	Slug                    pgtype.Text        `json:"slug"`
+	ImageUrl                pgtype.Text        `json:"imageUrl"`
+	Count                   pgtype.Numeric     `json:"count"`
+	Price                   pgtype.Numeric     `json:"price"`
+	PackingType             PackingType        `json:"packingType"`
+	PackingCoefficientTypes []pgtype.Numeric   `json:"packingCoefficientTypes"`
+	CreatedAt               pgtype.Timestamptz `json:"createdAt"`
+	CategoryName            pgtype.Text        `json:"categoryName"`
 }
 
 func (q *Queries) GetProductBySlug(ctx context.Context, slug pgtype.Text) (GetProductBySlugRow, error) {
@@ -214,18 +214,18 @@ type ListProductsParams struct {
 }
 
 type ListProductsRow struct {
-	ID                      pgtype.UUID              `json:"id"`
-	Name                    string                   `json:"name"`
-	Description             pgtype.Text              `json:"description"`
-	Category                pgtype.UUID              `json:"category"`
-	Slug                    pgtype.Text              `json:"slug"`
-	ImageUrl                pgtype.Text              `json:"imageUrl"`
-	Count                   pgtype.Text              `json:"count"`
-	Price                   pgtype.Text              `json:"price"`
-	PackingType             PackingType              `json:"packingType"`
-	PackingCoefficientTypes []PackingCoefficientType `json:"packingCoefficientTypes"`
-	CreatedAt               pgtype.Timestamptz       `json:"createdAt"`
-	CategoryName            pgtype.Text              `json:"categoryName"`
+	ID                      pgtype.UUID        `json:"id"`
+	Name                    string             `json:"name"`
+	Description             pgtype.Text        `json:"description"`
+	Category                pgtype.UUID        `json:"category"`
+	Slug                    pgtype.Text        `json:"slug"`
+	ImageUrl                pgtype.Text        `json:"imageUrl"`
+	Count                   pgtype.Numeric     `json:"count"`
+	Price                   pgtype.Numeric     `json:"price"`
+	PackingType             PackingType        `json:"packingType"`
+	PackingCoefficientTypes []pgtype.Numeric   `json:"packingCoefficientTypes"`
+	CreatedAt               pgtype.Timestamptz `json:"createdAt"`
+	CategoryName            pgtype.Text        `json:"categoryName"`
 }
 
 func (q *Queries) ListProducts(ctx context.Context, arg ListProductsParams) ([]ListProductsRow, error) {
@@ -282,17 +282,17 @@ RETURNING
 `
 
 type UpdateProductParams struct {
-	ID                      pgtype.UUID              `json:"id"`
-	Name                    string                   `json:"name"`
-	Description             pgtype.Text              `json:"description"`
-	Category                pgtype.UUID              `json:"category"`
-	ImageUrl                pgtype.Text              `json:"imageUrl"`
-	Price                   pgtype.Text              `json:"price"`
-	Count                   pgtype.Text              `json:"count"`
-	Discount                pgtype.Text              `json:"discount"`
-	Slug                    pgtype.Text              `json:"slug"`
-	PackingType             PackingType              `json:"packingType"`
-	PackingCoefficientTypes []PackingCoefficientType `json:"packingCoefficientTypes"`
+	ID                      pgtype.UUID      `json:"id"`
+	Name                    string           `json:"name"`
+	Description             pgtype.Text      `json:"description"`
+	Category                pgtype.UUID      `json:"category"`
+	ImageUrl                pgtype.Text      `json:"imageUrl"`
+	Price                   pgtype.Numeric   `json:"price"`
+	Count                   pgtype.Numeric   `json:"count"`
+	Discount                pgtype.Text      `json:"discount"`
+	Slug                    pgtype.Text      `json:"slug"`
+	PackingType             PackingType      `json:"packingType"`
+	PackingCoefficientTypes []pgtype.Numeric `json:"packingCoefficientTypes"`
 }
 
 func (q *Queries) UpdateProduct(ctx context.Context, arg UpdateProductParams) (Product, error) {

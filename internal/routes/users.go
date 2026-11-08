@@ -2,7 +2,6 @@ package routes
 
 import (
 	"encoding/json"
-	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -78,10 +77,8 @@ func RegisterUsersRoutes(mux *chi.Mux, service services.Service) {
 				http.Error(w, err.Error(), http.StatusUnauthorized)
 				return
 			}
-			fmt.Print(userFromDB.Password)
 			ok, err := argon2id.ComparePasswordAndHash(user.Password, userFromDB.Password)
 			if err != nil {
-				fmt.Println(err.Error())
 				http.Error(w, "", http.StatusUnauthorized)
 				return
 			}

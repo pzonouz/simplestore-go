@@ -2,7 +2,6 @@ package services
 
 import (
 	"context"
-	"fmt"
 	sqlc "simplestore_go/internal/db"
 
 	"github.com/jackc/pgx/v5/pgtype"
@@ -10,7 +9,6 @@ import (
 
 func (s *Service) GetCategories(ctx context.Context, args sqlc.ListCategoriesParams) ([]sqlc.ListCategoriesRow, error) {
 	Categories, err := s.queries.ListCategories(ctx, args)
-	fmt.Println(err)
 	if err != nil {
 		return []sqlc.ListCategoriesRow{}, err
 	}
