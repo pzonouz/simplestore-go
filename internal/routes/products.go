@@ -2,14 +2,16 @@ package routes
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"net/url"
-	sqlc "simplestore_go/internal/db"
-	"simplestore_go/internal/services"
-	"simplestore_go/utils"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgtype"
+
+	sqlc "simplestore_go/internal/db"
+	"simplestore_go/internal/services"
+	"simplestore_go/utils"
 )
 
 func RegisterProductsRoutes(mux *chi.Mux, service services.Service) {
@@ -35,31 +37,45 @@ func RegisterProductsRoutes(mux *chi.Mux, service services.Service) {
 				return
 			}
 		})
+
 		r.Get("/by_slug/{slug}", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
-			slugRaw := chi.URLParam(r, "slug")
 
-			slug, err := url.PathUnescape(slugRaw)
+			rawSlug := r.PathValue("slug")
+
+			fmt.Println(rawSlug)
+			// chi may return an escaped value when RawPath is set.
+			slug, err := url.PathUnescape(rawSlug)
+			fmt.Println(slug)
+
 			if err != nil {
 				http.Error(w, "invalid slug encoding", http.StatusBadRequest)
 				return
 			}
-			product, err := service.GetProductBySlug(r.Context(), pgtype.Text{String: slug, Valid: true})
+
+			product, err := service.GetProductBySlug(
+				r.Context(),
+				pgtype.Text{String: slug, Valid: true},
+			)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)
 				return
 			}
-			err = json.NewEncoder(w).Encode(product)
+
+			if err := json.NewEncoder(w).Encode(product); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
 			w.WriteHeader(http.StatusCreated)
-			if err != nil {
-				http.Error(w, err.Error(), http.StatusBadRequest)
-				return
-			}
 		})
+
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			var products []sqlc.ListProductsRow
-			products, err := service.GetProducts(r.Context(), sqlc.ListProductsParams{Limit: 100, Offset: 0})
+			products, err := service.GetProducts(
+				r.Context(),
+				sqlc.ListProductsParams{Limit: 100, Offset: 0},
+			)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -124,6 +140,5 @@ func RegisterProductsRoutes(mux *chi.Mux, service services.Service) {
 			w.Header().Set("content-type", "application/json")
 			w.WriteHeader(http.StatusNoContent)
 		})
-
 	})
 }
