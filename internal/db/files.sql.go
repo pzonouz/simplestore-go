@@ -15,7 +15,7 @@ const createFile = `-- name: CreateFile :one
 INSERT INTO files(name, url)
     VALUES ($1, $2)
 RETURNING
-    id, name, url, product, category, created_at
+    id, name, url, created_at
 `
 
 type CreateFileParams struct {
@@ -30,8 +30,6 @@ func (q *Queries) CreateFile(ctx context.Context, arg CreateFileParams) (File, e
 		&i.ID,
 		&i.Name,
 		&i.Url,
-		&i.Product,
-		&i.Category,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -60,16 +58,9 @@ WHERE
 LIMIT 1
 `
 
-type GetFileRow struct {
-	ID        pgtype.UUID        `json:"id"`
-	Name      string             `json:"name"`
-	Url       pgtype.Text        `json:"url"`
-	CreatedAt pgtype.Timestamptz `json:"createdAt"`
-}
-
-func (q *Queries) GetFile(ctx context.Context, id pgtype.UUID) (GetFileRow, error) {
+func (q *Queries) GetFile(ctx context.Context, id pgtype.UUID) (File, error) {
 	row := q.db.QueryRow(ctx, getFile, id)
-	var i GetFileRow
+	var i File
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
@@ -97,22 +88,15 @@ type ListFilesParams struct {
 	Offset int32 `json:"offset"`
 }
 
-type ListFilesRow struct {
-	ID        pgtype.UUID        `json:"id"`
-	Name      string             `json:"name"`
-	Url       pgtype.Text        `json:"url"`
-	CreatedAt pgtype.Timestamptz `json:"createdAt"`
-}
-
-func (q *Queries) ListFiles(ctx context.Context, arg ListFilesParams) ([]ListFilesRow, error) {
+func (q *Queries) ListFiles(ctx context.Context, arg ListFilesParams) ([]File, error) {
 	rows, err := q.db.Query(ctx, listFiles, arg.Limit, arg.Offset)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListFilesRow
+	items := []File{}
 	for rows.Next() {
-		var i ListFilesRow
+		var i File
 		if err := rows.Scan(
 			&i.ID,
 			&i.Name,
@@ -138,7 +122,7 @@ SET
 WHERE
     id = $1
 RETURNING
-    id, name, url, product, category, created_at
+    id, name, url, created_at
 `
 
 type UpdateFileParams struct {
@@ -154,8 +138,6 @@ func (q *Queries) UpdateFile(ctx context.Context, arg UpdateFileParams) (File, e
 		&i.ID,
 		&i.Name,
 		&i.Url,
-		&i.Product,
-		&i.Category,
 		&i.CreatedAt,
 	)
 	return i, err

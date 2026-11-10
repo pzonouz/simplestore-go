@@ -14,8 +14,7 @@ import (
 const createProduct = `-- name: CreateProduct :one
 INSERT INTO products(name, description, category, image_url, price, count, discount, slug, packing_type, packing_coefficient_types)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-RETURNING
-    packing_type, packing_coefficient_types, id, name, description, category, image_url, slug, price, count, discount, created_at
+RETURNING packing_type, packing_coefficient_types, id, name, description, category, image_url, slug, price, count, discount, created_at
 `
 
 type CreateProductParams struct {
@@ -85,12 +84,16 @@ SELECT
     p.packing_type,
     p.packing_coefficient_types,
     p.created_at,
-    c.name AS category_name
+    c.name AS category_name,
+	COALESCE (ARRAY_AGG(DISTINCT pf.file_id) FILTER (WHERE pf.file_id IS NOT NULL),'{}')::UUID[] as file_ids
 FROM
     products AS p
     LEFT JOIN categories AS c ON p.category = c.id
+    LEFT JOIN products_files AS pf ON pf.product_id=p.id
+    LEFT JOIN files AS f ON pf.file_id=f.id
 WHERE
     p.id = $1
+GROUP BY p.id,c.name
 LIMIT 1
 `
 
@@ -107,6 +110,7 @@ type GetProductRow struct {
 	PackingCoefficientTypes []pgtype.Numeric   `json:"packingCoefficientTypes"`
 	CreatedAt               pgtype.Timestamptz `json:"createdAt"`
 	CategoryName            pgtype.Text        `json:"categoryName"`
+	FileIds                 []pgtype.UUID      `json:"fileIds"`
 }
 
 func (q *Queries) GetProduct(ctx context.Context, id pgtype.UUID) (GetProductRow, error) {
@@ -125,6 +129,7 @@ func (q *Queries) GetProduct(ctx context.Context, id pgtype.UUID) (GetProductRow
 		&i.PackingCoefficientTypes,
 		&i.CreatedAt,
 		&i.CategoryName,
+		&i.FileIds,
 	)
 	return i, err
 }
@@ -142,12 +147,17 @@ SELECT
     p.packing_type,
     p.packing_coefficient_types,
     p.created_at,
-    c.name AS category_name
+    c.name AS category_name,
+	COALESCE (ARRAY_AGG(DISTINCT pf.file_id) FILTER (WHERE pf.file_id IS NOT NULL),'{}')::UUID[] as file_ids
 FROM
     products AS p
     LEFT JOIN categories AS c ON p.category = c.id
+    LEFT JOIN products_files AS pf ON pf.product_id=p.id
+    LEFT JOIN files AS f ON pf.file_id=f.id
+
 WHERE
     p.slug = $1
+GROUP BY p.id,c.name
 LIMIT 1
 `
 
@@ -164,6 +174,7 @@ type GetProductBySlugRow struct {
 	PackingCoefficientTypes []pgtype.Numeric   `json:"packingCoefficientTypes"`
 	CreatedAt               pgtype.Timestamptz `json:"createdAt"`
 	CategoryName            pgtype.Text        `json:"categoryName"`
+	FileIds                 []pgtype.UUID      `json:"fileIds"`
 }
 
 func (q *Queries) GetProductBySlug(ctx context.Context, slug pgtype.Text) (GetProductBySlugRow, error) {
@@ -182,8 +193,24 @@ func (q *Queries) GetProductBySlug(ctx context.Context, slug pgtype.Text) (GetPr
 		&i.PackingCoefficientTypes,
 		&i.CreatedAt,
 		&i.CategoryName,
+		&i.FileIds,
 	)
 	return i, err
+}
+
+const insertIntoProductsFiles = `-- name: InsertIntoProductsFiles :exec
+INSERT INTO products_files (product_id,file_id) SELECT $1,unnest($2::uuid[])
+    ON CONFLICT DO NOTHING
+`
+
+type InsertIntoProductsFilesParams struct {
+	ProductID pgtype.UUID   `json:"productId"`
+	Column2   []pgtype.UUID `json:"column2"`
+}
+
+func (q *Queries) InsertIntoProductsFiles(ctx context.Context, arg InsertIntoProductsFilesParams) error {
+	_, err := q.db.Exec(ctx, insertIntoProductsFiles, arg.ProductID, arg.Column2)
+	return err
 }
 
 const listProducts = `-- name: ListProducts :many
@@ -234,7 +261,7 @@ func (q *Queries) ListProducts(ctx context.Context, arg ListProductsParams) ([]L
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListProductsRow
+	items := []ListProductsRow{}
 	for rows.Next() {
 		var i ListProductsRow
 		if err := rows.Scan(

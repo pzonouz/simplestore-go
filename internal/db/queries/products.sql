@@ -11,12 +11,16 @@ SELECT
     p.packing_type,
     p.packing_coefficient_types,
     p.created_at,
-    c.name AS category_name
+    c.name AS category_name,
+	COALESCE (ARRAY_AGG(DISTINCT pf.file_id) FILTER (WHERE pf.file_id IS NOT NULL),'{}')::UUID[] as file_ids
 FROM
     products AS p
     LEFT JOIN categories AS c ON p.category = c.id
+    LEFT JOIN products_files AS pf ON pf.product_id=p.id
+    LEFT JOIN files AS f ON pf.file_id=f.id
 WHERE
     p.id = $1
+GROUP BY p.id,c.name
 LIMIT 1;
 
 -- name: GetProductBySlug :one
@@ -32,12 +36,17 @@ SELECT
     p.packing_type,
     p.packing_coefficient_types,
     p.created_at,
-    c.name AS category_name
+    c.name AS category_name,
+	COALESCE (ARRAY_AGG(DISTINCT pf.file_id) FILTER (WHERE pf.file_id IS NOT NULL),'{}')::UUID[] as file_ids
 FROM
     products AS p
     LEFT JOIN categories AS c ON p.category = c.id
+    LEFT JOIN products_files AS pf ON pf.product_id=p.id
+    LEFT JOIN files AS f ON pf.file_id=f.id
+
 WHERE
     p.slug = $1
+GROUP BY p.id,c.name
 LIMIT 1;
 
 -- name: ListProducts :many
@@ -64,8 +73,11 @@ LIMIT $1 OFFSET $2;
 -- name: CreateProduct :one
 INSERT INTO products(name, description, category, image_url, price, count, discount, slug, packing_type, packing_coefficient_types)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-RETURNING
-    *;
+RETURNING *;
+
+-- name: InsertIntoProductsFiles :exec
+INSERT INTO products_files (product_id,file_id) SELECT $1,unnest($2::uuid[])
+    ON CONFLICT DO NOTHING;
 
 -- name: UpdateProduct :one
 UPDATE

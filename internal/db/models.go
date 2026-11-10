@@ -66,8 +66,6 @@ type File struct {
 	ID        pgtype.UUID        `json:"id"`
 	Name      string             `json:"name"`
 	Url       pgtype.Text        `json:"url"`
-	Product   pgtype.UUID        `json:"product"`
-	Category  pgtype.UUID        `json:"category"`
 	CreatedAt pgtype.Timestamptz `json:"createdAt"`
 }
 
@@ -84,6 +82,11 @@ type Product struct {
 	Count                   pgtype.Numeric     `json:"count"`
 	Discount                pgtype.Text        `json:"discount"`
 	CreatedAt               pgtype.Timestamptz `json:"createdAt"`
+}
+
+type ProductsFile struct {
+	ProductID pgtype.UUID `json:"productId"`
+	FileID    pgtype.UUID `json:"fileId"`
 }
 
 type User struct {

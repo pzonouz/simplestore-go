@@ -88,7 +88,7 @@ func RegisterProductsRoutes(mux *chi.Mux, service services.Service) {
 		})
 		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
-			var product sqlc.CreateProductParams
+			var product services.CereateProductDto
 			err := json.NewDecoder(r.Body).Decode(&product)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusBadRequest)

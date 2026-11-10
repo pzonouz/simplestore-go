@@ -3,16 +3,16 @@ package services
 import (
 	"context"
 	"fmt"
-	sqlc "simplestore_go/internal/db"
 	"time"
 	"uuid"
 
 	"github.com/alexedwards/argon2id"
 	"github.com/jackc/pgx/v5/pgtype"
+
+	sqlc "simplestore_go/internal/db"
 )
 
 func (s *Service) GetUsers(ctx context.Context) ([]sqlc.User, error) {
-
 	users, err := s.queries.ListUsers(ctx, sqlc.ListUsersParams{})
 	if err != nil {
 		return []sqlc.User{}, err
@@ -22,14 +22,18 @@ func (s *Service) GetUsers(ctx context.Context) ([]sqlc.User, error) {
 	}
 	return users, err
 }
+
 func (s *Service) CreateUsers(ctx context.Context, args sqlc.CreateUserParams) (sqlc.User, error) {
 	existingUser, err := s.queries.GetUserByEmail(ctx, args.Email)
 	if err == nil {
 		if !existingUser.IsActive.Bool {
-			s.queries.DeleteUser(ctx, existingUser.ID)
+			err = s.queries.DeleteUser(ctx, existingUser.ID)
+			if err != nil {
+				return sqlc.User{}, err
+			}
 		}
 	}
-	token := (uuid.New()).String()
+	token := uuid.New().String()
 	now := time.Now()
 	expiredTime := now.Add(24 * time.Hour)
 	pass, err := argon2id.CreateHash(args.Password, argon2id.DefaultParams)
@@ -41,6 +45,7 @@ func (s *Service) CreateUsers(ctx context.Context, args sqlc.CreateUserParams) (
 	args.ExpiredTime = pgtype.Timestamptz{Time: expiredTime, Valid: true}
 	return s.queries.CreateUser(ctx, args)
 }
+
 func (s *Service) ActivateUserByToken(ctx context.Context, token pgtype.Text) error {
 	rowsCount, err := s.queries.ActivateUserByToken(ctx, token)
 	if err != nil {
@@ -51,6 +56,7 @@ func (s *Service) ActivateUserByToken(ctx context.Context, token pgtype.Text) er
 	}
 	return nil
 }
+
 func (s *Service) GetUserByEmail(ctx context.Context, email pgtype.Text) (sqlc.User, error) {
 	user, err := s.queries.GetUserByEmail(ctx, email)
 	if err != nil {

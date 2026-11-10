@@ -122,7 +122,7 @@ func (q *Queries) ListCategories(ctx context.Context, arg ListCategoriesParams) 
 		return nil, err
 	}
 	defer rows.Close()
-	var items []ListCategoriesRow
+	items := []ListCategoriesRow{}
 	for rows.Next() {
 		var i ListCategoriesRow
 		if err := rows.Scan(
@@ -170,7 +170,7 @@ func (q *Queries) NoChildrenCategories(ctx context.Context) ([]Category, error) 
 		return nil, err
 	}
 	defer rows.Close()
-	var items []Category
+	items := []Category{}
 	for rows.Next() {
 		var i Category
 		if err := rows.Scan(

@@ -7,11 +7,12 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
-	sqlc "simplestore_go/internal/db"
 	"strings"
 	"uuid"
 
 	"github.com/jackc/pgx/v5/pgtype"
+
+	sqlc "simplestore_go/internal/db"
 )
 
 func (s *Service) FileUpload(w http.ResponseWriter, r *http.Request) {
@@ -53,24 +54,29 @@ func (s *Service) FileUpload(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 }
-func (s *Service) GetFiles(ctx context.Context, args sqlc.ListFilesParams) ([]sqlc.ListFilesRow, error) {
+
+func (s *Service) GetFiles(
+	ctx context.Context,
+	args sqlc.ListFilesParams,
+) ([]sqlc.File, error) {
 	Files, err := s.queries.ListFiles(ctx, args)
 	if err != nil {
-		return []sqlc.ListFilesRow{}, err
+		return []sqlc.File{}, err
 	}
 	if Files == nil {
-		return []sqlc.ListFilesRow{}, err
+		return []sqlc.File{}, err
 	}
 	return Files, err
 }
-func (s *Service) GetFile(ctx context.Context, id pgtype.UUID) (sqlc.GetFileRow, error) {
 
+func (s *Service) GetFile(ctx context.Context, id pgtype.UUID) (sqlc.File, error) {
 	File, err := s.queries.GetFile(ctx, id)
 	if err != nil {
-		return sqlc.GetFileRow{}, err
+		return sqlc.File{}, err
 	}
 	return File, err
 }
+
 func (s *Service) CreateFile(ctx context.Context, args sqlc.CreateFileParams) (sqlc.File, error) {
 	file, err := s.queries.CreateFile(ctx, args)
 	if err != nil {
@@ -79,9 +85,11 @@ func (s *Service) CreateFile(ctx context.Context, args sqlc.CreateFileParams) (s
 
 	return file, err
 }
+
 func (s *Service) UpdateFile(ctx context.Context, args sqlc.UpdateFileParams) (sqlc.File, error) {
 	return s.queries.UpdateFile(ctx, args)
 }
+
 func (s *Service) DeleteFile(ctx context.Context, id pgtype.UUID) error {
 	return s.queries.DeleteFile(ctx, id)
 }

@@ -1,7 +1,7 @@
 CREATE TYPE packing_type AS ENUM(
-    'Quantity',
-    'Volume',
-    'Weight'
+'Quantity',
+'Volume',
+'Weight'
 );
 
 CREATE TABLE "products"(
@@ -44,9 +44,13 @@ CREATE TABLE "files"(
     "id" uuid PRIMARY KEY DEFAULT (gen_random_uuid()),
     "name" varchar UNIQUE NOT NULL,
     "url" varchar,
-    "product" uuid,
-    "category" uuid,
     "created_at" timestamptz NOT NULL DEFAULT (now())
+);
+
+CREATE TABLE "products_files" (
+    product_id uuid NOT NULL REFERENCES products(id) ON DELETE CASCADE,
+    file_id  uuid NOT NULL REFERENCES files(id)  ON DELETE CASCADE,
+    PRIMARY KEY (product_id, file_id)
 );
 
 CREATE INDEX ON "users"("email");
@@ -54,14 +58,8 @@ CREATE INDEX ON "users"("email");
 CREATE INDEX ON "users"("phone_number");
 
 ALTER TABLE "categories"
-    ADD FOREIGN KEY ("parent") REFERENCES "categories"("id") DEFERRABLE INITIALLY IMMEDIATE;
+ADD FOREIGN KEY ("parent") REFERENCES "categories"("id") DEFERRABLE INITIALLY IMMEDIATE;
 
 ALTER TABLE "products"
-    ADD FOREIGN KEY ("category") REFERENCES "categories"("id") DEFERRABLE INITIALLY IMMEDIATE;
-
-ALTER TABLE "files"
-    ADD FOREIGN KEY ("product") REFERENCES "products"("id") DEFERRABLE INITIALLY IMMEDIATE;
-
-ALTER TABLE "files"
-    ADD FOREIGN KEY ("category") REFERENCES "categories"("id") DEFERRABLE INITIALLY IMMEDIATE;
+ADD FOREIGN KEY ("category") REFERENCES "categories"("id") DEFERRABLE INITIALLY IMMEDIATE;
 
