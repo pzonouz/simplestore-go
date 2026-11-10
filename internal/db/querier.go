@@ -19,6 +19,7 @@ type Querier interface {
 	DeleteCategory(ctx context.Context, id pgtype.UUID) error
 	DeleteFile(ctx context.Context, id pgtype.UUID) error
 	DeleteProduct(ctx context.Context, id pgtype.UUID) error
+	DeleteProductFiles(ctx context.Context, productID pgtype.UUID) error
 	DeleteUser(ctx context.Context, id pgtype.UUID) error
 	GetCategory(ctx context.Context, id pgtype.UUID) (GetCategoryRow, error)
 	GetFile(ctx context.Context, id pgtype.UUID) (File, error)

@@ -71,6 +71,16 @@ func (q *Queries) DeleteProduct(ctx context.Context, id pgtype.UUID) error {
 	return err
 }
 
+const deleteProductFiles = `-- name: DeleteProductFiles :exec
+
+DELETE FROM products_files WHERE product_id = $1
+`
+
+func (q *Queries) DeleteProductFiles(ctx context.Context, productID pgtype.UUID) error {
+	_, err := q.db.Exec(ctx, deleteProductFiles, productID)
+	return err
+}
+
 const getProduct = `-- name: GetProduct :one
 SELECT
     p.id,

@@ -54,6 +54,19 @@ type CereateProductDto struct {
 	PackingCoefficientTypes []pgtype.Numeric `json:"packingCoefficientTypes"`
 	FileIds                 []pgtype.UUID    `json:"fileIds"`
 }
+type UpdateProductDto struct {
+	ID                      pgtype.UUID      `json:"id"`
+	Name                    string           `json:"name"`
+	Description             pgtype.Text      `json:"description"`
+	Category                pgtype.UUID      `json:"category"`
+	Slug                    pgtype.Text      `json:"slug"`
+	ImageUrl                pgtype.Text      `json:"imageUrl"`
+	Count                   pgtype.Numeric   `json:"count"`
+	Price                   pgtype.Numeric   `json:"price"`
+	PackingType             sqlc.PackingType `json:"packingType"`
+	PackingCoefficientTypes []pgtype.Numeric `json:"packingCoefficientTypes"`
+	FileIds                 []pgtype.UUID    `json:"fileIds"`
+}
 
 func (s *Service) CreateProduct(
 	ctx context.Context,
@@ -95,10 +108,49 @@ func (s *Service) CreateProduct(
 
 func (s *Service) UpdateProduct(
 	ctx context.Context,
-	args sqlc.UpdateProductParams,
+	args UpdateProductDto,
 ) (sqlc.Product, error) {
-	// args.Description.String = utils.NormalizeSlug(args.Description.String)
-	return s.queries.UpdateProduct(ctx, args)
+	tx, err := s.pool.BeginTx(ctx, pgx.TxOptions{})
+	if err != nil {
+		return sqlc.Product{}, err
+	}
+	defer tx.Rollback(ctx)
+	q := s.queries.WithTx(tx)
+	product, err := q.UpdateProduct(
+		ctx,
+		sqlc.UpdateProductParams{
+			Name:                    args.Name,
+			Description:             args.Description,
+			ImageUrl:                args.ImageUrl,
+			Price:                   args.Price,
+			Count:                   args.Count,
+			Slug:                    args.Slug,
+			PackingType:             args.PackingType,
+			PackingCoefficientTypes: args.PackingCoefficientTypes,
+			ID:                      args.ID,
+			Category:                args.Category,
+		},
+	)
+	if err != nil {
+		return sqlc.Product{}, err
+	}
+	err = q.DeleteProductFiles(ctx, args.ID)
+	if err != nil {
+		return sqlc.Product{}, err
+	}
+	err = q.InsertIntoProductsFiles(
+		ctx,
+		sqlc.InsertIntoProductsFilesParams{ProductID: args.ID, Column2: args.FileIds},
+	)
+	if err != nil {
+		return sqlc.Product{}, err
+	}
+	err = tx.Commit(ctx)
+	if err != nil {
+		return sqlc.Product{}, err
+	}
+
+	return product, nil
 }
 
 func (s *Service) DeleteProduct(ctx context.Context, id pgtype.UUID) error {

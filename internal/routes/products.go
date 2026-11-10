@@ -104,7 +104,7 @@ func RegisterProductsRoutes(mux *chi.Mux, service services.Service) {
 		r.Patch("/{id}", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			id := chi.URLParam(r, "id")
-			var product sqlc.UpdateProductParams
+			var product services.UpdateProductDto
 			var uuidId pgtype.UUID
 			err := uuidId.Scan(id)
 			if err != nil {
