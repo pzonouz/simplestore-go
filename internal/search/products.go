@@ -19,8 +19,8 @@ func SearchProducts(
 		"query": {
 			"multi_match": {
 				"query": %q,
-				"fields": ["name", "description"],
-				"type": "bool_prefix"
+				"fields": ["name^2", "name.ngrams"],
+				"type": "best_fields"
 			}
 		},
 		"size": 20

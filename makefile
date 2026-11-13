@@ -5,6 +5,7 @@
 # Configuration
 # ============================================================================
 NETWORK           = search-net
+OPENSEARCH_URL ?= http://localhost:9200
 
 # Host-facing URL — used by migrate-* (runs on your machine)
 POSTGRES_URL  = postgresql://$(DATABASE_USER):$(DATABASE_PASSWORD)@localhost:5432/$(DATABASE_NAME)?sslmode=disable
@@ -113,14 +114,25 @@ start-redis: network
 stop-redis:
 	-docker stop redis 2>/dev/null || true
 
+
+
+# ============================================================================
+# OpenSearch index template (idempotent — safe to run every time)
+# ============================================================================
+setup-index-template: network
+	@echo "applying products index template..."
+	curl -sf -X PUT "$(OPENSEARCH_URL)/_index_template/products_template" \
+		-H 'Content-Type: application/json' \
+		-d @opensearch/products-template.json > /dev/null
+	@echo "index template applied"
 # ============================================================================
 # PGSync (CDC: PostgreSQL -> OpenSearch)
 # ============================================================================
-start-pgsync: start-postgres start-opensearch start-redis
+start-pgsync: start-postgres start-opensearch start-redis setup-index-template
 	@test -f "$(CURDIR)/schema.json" || \
 		(echo "schema.json not found in $(CURDIR)" && exit 1)
 	@mkdir -p "$(CURDIR)/checkpoints"
-	@docker container inspect -f '{{.State.Running}}' pgsync 2>/dev/null | grep -q true || \
+	docker container inspect -f '{{.State.Running}}' pgsync 2>/dev/null | grep -q true || \
 		( \
 			echo "running bootstrap (creates index + replication slot)..."; \
 			docker run --rm \
@@ -146,6 +158,8 @@ start-pgsync: start-postgres start-opensearch start-redis
 				-v "$(CURDIR)/checkpoints:/app/checkpoints" \
 				toluaina1/pgsync:latest --config schema.json --daemon \
 		)
+
+
 
 stop-pgsync:
 	-docker stop pgsync 2>/dev/null || true
