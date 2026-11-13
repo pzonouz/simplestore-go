@@ -9,13 +9,12 @@ export
 # Configuration
 # ============================================================================
 NETWORK           = search-net
-POSTGRES_DB_NAME  = simple_store_go
 
 # Host-facing URL — used by migrate-* (runs on your machine)
-POSTGRES_URL  = postgresql://$(DATABASE_USER):$(DATABASE_PASSWORD)@localhost:5432/$(POSTGRES_DB_NAME)?sslmode=disable
+POSTGRES_URL  = postgresql://$(DATABASE_USER):$(DATABASE_PASSWORD)@localhost:5432/$(DATABASE_NAME)?sslmode=disable
 
 # Container-facing URL — used by PGSync (runs inside the Docker network)
-PGSYNC_PG_URL = postgresql://$(DATABASE_USER):$(DATABASE_PASSWORD)@postgres:5432/$(POSTGRES_DB_NAME)?sslmode=disable
+PGSYNC_PG_URL = postgresql://$(DATABASE_USER):$(DATABASE_PASSWORD)@postgres:5432/$(DATABASE_NAME)?sslmode=disable
 
 # ============================================================================
 # Phony targets
@@ -67,10 +66,10 @@ start-postgres: network
 			-c max_wal_senders=4
 	@echo "waiting for postgres to accept connections..."
 	@for i in $$(seq 1 30); do \
-		docker exec postgres pg_isready -U $(DATABASE_USER) -d $(POSTGRES_DB_NAME) >/dev/null 2>&1 && break; \
+		docker exec postgres pg_isready -U $(DATABASE_USER) -d $(DATABASE_NAME) >/dev/null 2>&1 && break; \
 		sleep 1; \
 	done
-	@docker exec postgres pg_isready -U $(DATABASE_USER) -d $(POSTGRES_DB_NAME) >/dev/null 2>&1 || \
+	@docker exec postgres pg_isready -U $(DATABASE_USER) -d $(DATABASE_NAME) >/dev/null 2>&1 || \
 		(echo "postgres failed to become ready" && exit 1)
 
 stop-postgres:
