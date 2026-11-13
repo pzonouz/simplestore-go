@@ -86,6 +86,23 @@ func RegisterProductsRoutes(mux *chi.Mux, service services.Service) {
 				return
 			}
 		})
+		// r.Get("/search/{keyword}", func(w http.ResponseWriter, r *http.Request) {
+		// 	w.Header().Set("Content-Type", "application/json")
+		// 	var products []sqlc.SearchProductsRow
+		//
+		// 	keyword := chi.URLParam(r, "keyword")
+		// 	products, err := service.SearchProduct(r.Context(), keyword)
+		// 	if err != nil {
+		// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		// 		return
+		// 	}
+		// 	err = json.NewEncoder(w).Encode(products)
+		// 	if err != nil {
+		// 		http.Error(w, err.Error(), http.StatusInternalServerError)
+		// 		return
+		// 	}
+		// })
+		//
 		r.Post("/", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			var product services.CereateProductDto

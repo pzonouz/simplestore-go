@@ -5,9 +5,10 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
+
 	"simplestore_go/internal/services"
 	"simplestore_go/utils"
-	"time"
 
 	sqlc "simplestore_go/internal/db"
 
@@ -63,7 +64,6 @@ func RegisterUsersRoutes(mux *chi.Mux, service services.Service) {
 			}
 			log.Println("HTML email sent successfully!")
 			w.WriteHeader(http.StatusCreated)
-
 		})
 		r.Post("/login", func(w http.ResponseWriter, r *http.Request) {
 			var user sqlc.User
@@ -89,7 +89,6 @@ func RegisterUsersRoutes(mux *chi.Mux, service services.Service) {
 			secret := os.Getenv("JWT_SECRET")
 			if secret == "" {
 				panic("JWT_SECRET environment variable is required")
-
 			}
 
 			t := jwt.New(jwt.SigningMethodHS256)
@@ -129,25 +128,29 @@ func RegisterUsersRoutes(mux *chi.Mux, service services.Service) {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
-			err = service.ActivateUserByToken(r.Context(), pgtype.Text{String: tokenBody.Token, Valid: true})
+			err = service.ActivateUserByToken(
+				r.Context(),
+				pgtype.Text{String: tokenBody.Token, Valid: true},
+			)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}
 			w.WriteHeader(http.StatusCreated)
 		})
-		r.With(utils.AuthenticatedMiddleware).Get("/me", func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Add("Content-Type", "application/json")
-			user, ok := r.Context().Value("user").(*utils.UserInfo)
-			if !ok {
-				http.Error(w, "", http.StatusUnauthorized)
-				return
-			}
-			err := json.NewEncoder(w).Encode(user)
-			if err != nil {
-				http.Error(w, "", http.StatusUnauthorized)
-				return
-			}
-		})
+		r.With(utils.AuthenticatedMiddleware).
+			Get("/me", func(w http.ResponseWriter, r *http.Request) {
+				w.Header().Add("Content-Type", "application/json")
+				user, ok := r.Context().Value("user").(*utils.UserInfo)
+				if !ok {
+					http.Error(w, "", http.StatusUnauthorized)
+					return
+				}
+				err := json.NewEncoder(w).Encode(user)
+				if err != nil {
+					http.Error(w, "", http.StatusUnauthorized)
+					return
+				}
+			})
 	})
 }

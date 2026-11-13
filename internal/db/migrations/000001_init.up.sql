@@ -53,6 +53,8 @@ CREATE TABLE "products_files" (
     PRIMARY KEY (product_id, file_id)
 );
 
+
+
 CREATE INDEX ON "users"("email");
 
 CREATE INDEX ON "users"("phone_number");

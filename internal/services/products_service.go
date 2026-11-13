@@ -31,6 +31,17 @@ func (s *Service) GetProduct(ctx context.Context, id pgtype.UUID) (sqlc.GetProdu
 	return Product, err
 }
 
+// func (s *Service) SearchProduct(
+// 	ctx context.Context,
+// 	keyword string,
+// ) ([]sqlc.SearchProductsFuzzyRow, error) {
+// 	Products, err := s.queries.SearchProductsFuzzy(ctx, keyword)
+// 	if err != nil {
+// 		return []sqlc.SearchProductsFuzzyRow{}, err
+// 	}
+// 	return Products, err
+// }
+
 func (s *Service) GetProductBySlug(
 	ctx context.Context,
 	slug pgtype.Text,

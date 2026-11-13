@@ -72,7 +72,6 @@ func (q *Queries) DeleteProduct(ctx context.Context, id pgtype.UUID) error {
 }
 
 const deleteProductFiles = `-- name: DeleteProductFiles :exec
-
 DELETE FROM products_files WHERE product_id = $1
 `
 

@@ -1,0 +1,10 @@
+[
+  {
+    "database": "simple_store_go",
+    "index": "products",
+    "nodes": {
+      "table": "products",
+      "columns": ["id", "name", "price", "image_url", "slug"]
+    }
+  }
+]

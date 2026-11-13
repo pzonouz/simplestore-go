@@ -104,3 +104,6 @@ WHERE id = $1;
 
 -- name: DeleteProductFiles :exec
 DELETE FROM products_files WHERE product_id = $1;
+
+
+
