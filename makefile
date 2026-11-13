@@ -1,7 +1,3 @@
-# Load environment (silently ignore if .env is absent)
--include .env
-export
-
 # Force serial execution so `make -j up` can't launch deps in parallel
 .NOTPARALLEL:
 
@@ -51,12 +47,12 @@ network:
 # PostgreSQL
 # ============================================================================
 start-postgres: network
-	@docker container inspect -f '{{.State.Running}}' postgres 2>/dev/null | grep -q true || \
+	docker container inspect -f '{{.State.Running}}' postgres 2>/dev/null | grep -q true || \
 		docker run -d --rm --name postgres \
 			--network $(NETWORK) \
 			-p 5432:5432 \
 			-e POSTGRES_USER=$(DATABASE_USER) \
-			-e POSTGRES_PASSWORD=$(DATABASE_PASSWORD) \
+			-e POSTGRES_PASSWORD=${DATABASE_PASSWORD} \
 			-e POSTGRES_DB=$(DATABASE_NAME) \
 			-e PGDATA=/var/lib/postgresql/data/pgdata \
 			-v $(DATABASE_NAME):/var/lib/postgresql/data \
