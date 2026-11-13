@@ -47,7 +47,7 @@ network:
 # PostgreSQL
 # ============================================================================
 start-postgres: network
-	docker container inspect -f '{{.State.Running}}' postgres 2>/dev/null | grep -q true || \
+	@docker container inspect -f '{{.State.Running}}' postgres 2>/dev/null | grep -q true || \
 		docker run -d --rm --name postgres \
 			--network $(NETWORK) \
 			-p 5432:5432 \
