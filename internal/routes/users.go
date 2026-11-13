@@ -108,6 +108,10 @@ func RegisterUsersRoutes(mux *chi.Mux, service services.Service) {
 				return
 			}
 			w.Header().Add("Content-Type", "application/json")
+			secure := true
+			if os.Getenv("env") == "DEV" {
+				secure = false
+			}
 			http.SetCookie(w, &http.Cookie{
 				Name:     "access",
 				Value:    token,
@@ -115,6 +119,7 @@ func RegisterUsersRoutes(mux *chi.Mux, service services.Service) {
 				Expires:  jwtClaims.ExpiresAt.Time,
 				HttpOnly: true,
 				SameSite: http.SameSiteLaxMode,
+				Secure:   secure,
 			})
 			w.WriteHeader(http.StatusCreated)
 		})
