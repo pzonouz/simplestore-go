@@ -10,9 +10,9 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 
-	sqlc "simplestore_go/internal/db"
-	"simplestore_go/internal/services"
-	"simplestore_go/utils"
+	sqlc "simple_store_go/internal/db"
+	"simple_store_go/internal/services"
+	"simple_store_go/utils"
 )
 
 func parseUUID(w http.ResponseWriter, raw string) (pgtype.UUID, bool) {

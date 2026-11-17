@@ -3,9 +3,11 @@ package routes
 import (
 	"encoding/json"
 	"net/http"
-	sqlc "simplestore_go/internal/db"
-	"simplestore_go/internal/services"
-	"simplestore_go/utils"
+
+	sqlc "simple_store_go/internal/db"
+	"simple_store_go/internal/services"
+	"simple_store_go/myTypes"
+	"simple_store_go/utils"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -48,10 +50,45 @@ func RegisterCategoriesRoutes(mux *chi.Mux, service services.Service) {
 				return
 			}
 		})
+		r.Get("/categories_tree", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			var categories []myTypes.ListCategoriesTreeRowDTO
+			categories, err := service.ListCategoriesTree(r.Context())
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			err = json.NewEncoder(w).Encode(categories)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		})
+		r.Get("/sub_categories/{slug}", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			slug := chi.URLParam(r, "slug")
+			var categories []sqlc.ListSubCategoriesBySlugRow
+			categories, err := service.GetSubCategoriesBySlug(
+				r.Context(),
+				pgtype.Text{String: slug, Valid: true},
+			)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			err = json.NewEncoder(w).Encode(categories)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+		})
 		r.Get("/", func(w http.ResponseWriter, r *http.Request) {
 			w.Header().Set("Content-Type", "application/json")
 			var categories []sqlc.ListCategoriesRow
-			categories, err := service.GetCategories(r.Context(), sqlc.ListCategoriesParams{Limit: 100, Offset: 0})
+			categories, err := service.GetCategories(
+				r.Context(),
+				sqlc.ListCategoriesParams{Limit: 100, Offset: 0},
+			)
 			if err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
@@ -115,6 +152,5 @@ func RegisterCategoriesRoutes(mux *chi.Mux, service services.Service) {
 			w.Header().Set("content-type", "application/json")
 			w.WriteHeader(http.StatusNoContent)
 		})
-
 	})
 }

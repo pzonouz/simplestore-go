@@ -8,6 +8,7 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgtype"
+	"simple_store_go/myTypes"
 )
 
 type Querier interface {
@@ -29,8 +30,12 @@ type Querier interface {
 	GetUserByEmail(ctx context.Context, email pgtype.Text) (User, error)
 	InsertIntoProductsFiles(ctx context.Context, arg InsertIntoProductsFilesParams) error
 	ListCategories(ctx context.Context, arg ListCategoriesParams) ([]ListCategoriesRow, error)
+	ListCategoriesTree(ctx context.Context) ([]myTypes.ListCategoriesTreeRowDTO, error)
 	ListFiles(ctx context.Context, arg ListFilesParams) ([]File, error)
 	ListProducts(ctx context.Context, arg ListProductsParams) ([]ListProductsRow, error)
+	ListProductsByCategoroies(ctx context.Context, slugs []string) ([]ListProductsByCategoroiesRow, error)
+	ListProductsByCategory(ctx context.Context, slug pgtype.Text) ([]ListProductsByCategoryRow, error)
+	ListSubCategoriesBySlug(ctx context.Context, slug pgtype.Text) ([]ListSubCategoriesBySlugRow, error)
 	ListUsers(ctx context.Context, arg ListUsersParams) ([]User, error)
 	NoChildrenCategories(ctx context.Context) ([]Category, error)
 	UpdateCategory(ctx context.Context, arg UpdateCategoryParams) (Category, error)

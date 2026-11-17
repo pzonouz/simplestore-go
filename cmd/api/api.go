@@ -10,9 +10,9 @@ import (
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	"simplestore_go/internal/routes"
-	"simplestore_go/internal/search"
-	"simplestore_go/internal/services"
+	"simple_store_go/internal/routes"
+	"simple_store_go/internal/search"
+	"simple_store_go/internal/services"
 )
 
 func RegisterRoutes(mux *chi.Mux, service services.Service) {

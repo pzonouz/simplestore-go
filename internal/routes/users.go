@@ -7,10 +7,10 @@ import (
 	"os"
 	"time"
 
-	"simplestore_go/internal/services"
-	"simplestore_go/utils"
+	"simple_store_go/internal/services"
+	"simple_store_go/utils"
 
-	sqlc "simplestore_go/internal/db"
+	sqlc "simple_store_go/internal/db"
 
 	"github.com/alexedwards/argon2id"
 	"github.com/go-chi/chi/v5"

@@ -6,7 +6,7 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 
-	sqlc "simplestore_go/internal/db"
+	sqlc "simple_store_go/internal/db"
 )
 
 func (s *Service) GetProducts(
@@ -31,17 +31,6 @@ func (s *Service) GetProduct(ctx context.Context, id pgtype.UUID) (sqlc.GetProdu
 	return Product, err
 }
 
-// func (s *Service) SearchProduct(
-// 	ctx context.Context,
-// 	keyword string,
-// ) ([]sqlc.SearchProductsFuzzyRow, error) {
-// 	Products, err := s.queries.SearchProductsFuzzy(ctx, keyword)
-// 	if err != nil {
-// 		return []sqlc.SearchProductsFuzzyRow{}, err
-// 	}
-// 	return Products, err
-// }
-
 func (s *Service) GetProductBySlug(
 	ctx context.Context,
 	slug pgtype.Text,
@@ -51,6 +40,28 @@ func (s *Service) GetProductBySlug(
 		return sqlc.GetProductBySlugRow{}, err
 	}
 	return Product, err
+}
+
+func (s *Service) ListProductsByCategoryBySlug(
+	ctx context.Context,
+	slug pgtype.Text,
+) ([]sqlc.ListProductsByCategoryRow, error) {
+	products, err := s.queries.ListProductsByCategory(ctx, slug)
+	if err != nil {
+		return []sqlc.ListProductsByCategoryRow{}, err
+	}
+	return products, err
+}
+
+func (s *Service) ListProductsByCategoriesSlug(
+	ctx context.Context,
+	slugs []string,
+) ([]sqlc.ListProductsByCategoroiesRow, error) {
+	products, err := s.queries.ListProductsByCategoroies(ctx, slugs)
+	if err != nil {
+		return []sqlc.ListProductsByCategoroiesRow{}, err
+	}
+	return products, err
 }
 
 type CereateProductDto struct {

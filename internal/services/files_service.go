@@ -12,7 +12,7 @@ import (
 
 	"github.com/jackc/pgx/v5/pgtype"
 
-	sqlc "simplestore_go/internal/db"
+	sqlc "simple_store_go/internal/db"
 )
 
 func (s *Service) FileUpload(w http.ResponseWriter, r *http.Request) {

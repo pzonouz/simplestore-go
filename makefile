@@ -199,3 +199,13 @@ migrate-down: start-postgres
 migrate-force: start-postgres
 	@test -n "$(version)" || (echo "usage: make migrate-force version=N" && exit 1)
 	migrate -path ./internal/db/migrations -database "$(POSTGRES_URL)" force $(version)
+
+pgadmin:
+	docker run -p 8080:8080 --rm \
+	  --name pgadmin \
+		--network $(NETWORK) \
+	  -e 'PGADMIN_DEFAULT_EMAIL=mail@mail.com' \
+	  -e 'PGADMIN_DEFAULT_PASSWORD=12345678' \
+	  -e 'PGADMIN_LISTEN_PORT=8080' \
+	  -v pgadmin_data:/var/lib/pgadmin \
+	  -d dpage/pgadmin4

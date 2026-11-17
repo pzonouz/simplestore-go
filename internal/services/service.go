@@ -3,7 +3,7 @@ package services
 import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	sqlc "simplestore_go/internal/db"
+	sqlc "simple_store_go/internal/db"
 )
 
 type Service struct {

@@ -12,3 +12,9 @@ sql:
         json_tags_case_style: "camel"
         emit_interface: true
         emit_empty_slices: true
+        overrides:
+           - column: "category_tree_view.tree"
+             go_type:
+              import: "simple_store_go/myTypes"
+              type: "ListCategoriesTreeRowDTO"
+              slice: true

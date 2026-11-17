@@ -16,6 +16,7 @@ CREATE TABLE "products"(
     "price" NUMERIC  DEFAULT 0,
     "count" NUMERIC DEFAULT 0,
     "discount" varchar(4),
+    "is_service" boolean DEFAULT False,
     "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
@@ -37,6 +38,8 @@ CREATE TABLE "categories"(
     "name" varchar UNIQUE NOT NULL,
     "description" text,
     "parent" uuid,
+    "slug" text,
+    "priority" NUMERIC DEFAULT 100,
     "created_at" timestamptz NOT NULL DEFAULT (now())
 );
 
@@ -56,8 +59,11 @@ CREATE TABLE "products_files" (
 
 
 CREATE INDEX ON "users"("email");
-
 CREATE INDEX ON "users"("phone_number");
+
+CREATE INDEX ON "categoires"("slug");
+CREATE INDEX ON "products"("slug");
+
 
 ALTER TABLE "categories"
 ADD FOREIGN KEY ("parent") REFERENCES "categories"("id") DEFERRABLE INITIALLY IMMEDIATE;
@@ -65,3 +71,26 @@ ADD FOREIGN KEY ("parent") REFERENCES "categories"("id") DEFERRABLE INITIALLY IM
 ALTER TABLE "products"
 ADD FOREIGN KEY ("category") REFERENCES "categories"("id") DEFERRABLE INITIALLY IMMEDIATE;
 
+CREATE OR REPLACE FUNCTION category_tree(p_parent uuid DEFAULT NULL)
+RETURNS jsonb
+LANGUAGE sql
+STABLE
+AS $$
+    SELECT COALESCE(jsonb_agg(node ORDER BY c.priority ASC NULLS LAST), '[]'::jsonb)
+    FROM (
+        SELECT jsonb_build_object(
+                   'id',       c.id,
+                   'name',     c.name,
+                   'slug',     c.slug,
+                   'priority', c.priority,
+                   'children', category_tree(c.id)      -- <-- recursive call
+               ) AS node,
+               c.priority,
+               c.name
+        FROM categories c
+        WHERE c.parent IS NOT DISTINCT FROM p_parent   -- NULL-safe for roots
+    ) s;
+$$;
+
+CREATE OR REPLACE VIEW category_tree_view AS
+SELECT category_tree() AS tree;

@@ -9,7 +9,7 @@ import (
 	"github.com/alexedwards/argon2id"
 	"github.com/jackc/pgx/v5/pgtype"
 
-	sqlc "simplestore_go/internal/db"
+	sqlc "simple_store_go/internal/db"
 )
 
 func (s *Service) GetUsers(ctx context.Context) ([]sqlc.User, error) {

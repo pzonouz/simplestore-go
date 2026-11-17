@@ -9,29 +9,40 @@ import (
 	"context"
 
 	"github.com/jackc/pgx/v5/pgtype"
+	"simple_store_go/myTypes"
 )
 
 const createCategory = `-- name: CreateCategory :one
-INSERT INTO categories(name, parent, description)
-    VALUES ($1, $2, $3)
+INSERT INTO categories(name, parent, description,slug, priority)
+    VALUES ($1, $2, $3, $4, $5)
 RETURNING
-    id, name, description, parent, created_at
+    id, name, description, parent, slug, priority, created_at
 `
 
 type CreateCategoryParams struct {
-	Name        string      `json:"name"`
-	Parent      pgtype.UUID `json:"parent"`
-	Description pgtype.Text `json:"description"`
+	Name        string         `json:"name"`
+	Parent      pgtype.UUID    `json:"parent"`
+	Description pgtype.Text    `json:"description"`
+	Slug        pgtype.Text    `json:"slug"`
+	Priority    pgtype.Numeric `json:"priority"`
 }
 
 func (q *Queries) CreateCategory(ctx context.Context, arg CreateCategoryParams) (Category, error) {
-	row := q.db.QueryRow(ctx, createCategory, arg.Name, arg.Parent, arg.Description)
+	row := q.db.QueryRow(ctx, createCategory,
+		arg.Name,
+		arg.Parent,
+		arg.Description,
+		arg.Slug,
+		arg.Priority,
+	)
 	var i Category
 	err := row.Scan(
 		&i.ID,
 		&i.Name,
 		&i.Description,
 		&i.Parent,
+		&i.Slug,
+		&i.Priority,
 		&i.CreatedAt,
 	)
 	return i, err
@@ -53,6 +64,8 @@ SELECT
     c.name,
     c.description,
     c.parent,
+    c.slug,
+    c.priority,
     c.created_at,
     p.name AS parent_name
 FROM
@@ -68,6 +81,8 @@ type GetCategoryRow struct {
 	Name        string             `json:"name"`
 	Description pgtype.Text        `json:"description"`
 	Parent      pgtype.UUID        `json:"parent"`
+	Slug        pgtype.Text        `json:"slug"`
+	Priority    pgtype.Numeric     `json:"priority"`
 	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
 	ParentName  pgtype.Text        `json:"parentName"`
 }
@@ -80,6 +95,8 @@ func (q *Queries) GetCategory(ctx context.Context, id pgtype.UUID) (GetCategoryR
 		&i.Name,
 		&i.Description,
 		&i.Parent,
+		&i.Slug,
+		&i.Priority,
 		&i.CreatedAt,
 		&i.ParentName,
 	)
@@ -92,13 +109,15 @@ SELECT
     c.name,
     c.description,
     c.parent,
+    c.slug,
+    c.priority,
     c.created_at,
     p.name AS parent_name
 FROM
     categories AS c
     LEFT JOIN categories AS p ON p.id = c.parent
 ORDER BY
-    c.created_at
+    c.priority,c.created_at
 LIMIT $1 OFFSET $2
 `
 
@@ -112,6 +131,8 @@ type ListCategoriesRow struct {
 	Name        string             `json:"name"`
 	Description pgtype.Text        `json:"description"`
 	Parent      pgtype.UUID        `json:"parent"`
+	Slug        pgtype.Text        `json:"slug"`
+	Priority    pgtype.Numeric     `json:"priority"`
 	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
 	ParentName  pgtype.Text        `json:"parentName"`
 }
@@ -130,6 +151,77 @@ func (q *Queries) ListCategories(ctx context.Context, arg ListCategoriesParams) 
 			&i.Name,
 			&i.Description,
 			&i.Parent,
+			&i.Slug,
+			&i.Priority,
+			&i.CreatedAt,
+			&i.ParentName,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listCategoriesTree = `-- name: ListCategoriesTree :one
+SELECT tree FROM category_tree_view
+`
+
+func (q *Queries) ListCategoriesTree(ctx context.Context) ([]myTypes.ListCategoriesTreeRowDTO, error) {
+	row := q.db.QueryRow(ctx, listCategoriesTree)
+	var tree []myTypes.ListCategoriesTreeRowDTO
+	err := row.Scan(&tree)
+	return tree, err
+}
+
+const listSubCategoriesBySlug = `-- name: ListSubCategoriesBySlug :many
+SELECT
+    c.id,
+    c.name,
+    c.description,
+    c.parent,
+    c.slug,
+    c.priority,
+    c.created_at,
+    p.name AS parent_name
+FROM
+    categories AS c
+    LEFT JOIN categories AS p ON p.id = c.parent
+    WHERE p.slug=$1
+ORDER BY
+    c.priority,c.created_at
+`
+
+type ListSubCategoriesBySlugRow struct {
+	ID          pgtype.UUID        `json:"id"`
+	Name        string             `json:"name"`
+	Description pgtype.Text        `json:"description"`
+	Parent      pgtype.UUID        `json:"parent"`
+	Slug        pgtype.Text        `json:"slug"`
+	Priority    pgtype.Numeric     `json:"priority"`
+	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
+	ParentName  pgtype.Text        `json:"parentName"`
+}
+
+func (q *Queries) ListSubCategoriesBySlug(ctx context.Context, slug pgtype.Text) ([]ListSubCategoriesBySlugRow, error) {
+	rows, err := q.db.Query(ctx, listSubCategoriesBySlug, slug)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListSubCategoriesBySlugRow{}
+	for rows.Next() {
+		var i ListSubCategoriesBySlugRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.Name,
+			&i.Description,
+			&i.Parent,
+			&i.Slug,
+			&i.Priority,
 			&i.CreatedAt,
 			&i.ParentName,
 		); err != nil {
@@ -149,6 +241,8 @@ SELECT
     name,
     description,
     parent,
+    slug,
+    priority,
     created_at
 FROM
     categories c
@@ -161,7 +255,7 @@ WHERE
         WHERE
             child.parent = c.id)
 ORDER BY
-    created_at
+    priority,created_at
 `
 
 func (q *Queries) NoChildrenCategories(ctx context.Context) ([]Category, error) {
@@ -178,6 +272,8 @@ func (q *Queries) NoChildrenCategories(ctx context.Context) ([]Category, error) 
 			&i.Name,
 			&i.Description,
 			&i.Parent,
+			&i.Slug,
+			&i.Priority,
 			&i.CreatedAt,
 		); err != nil {
 			return nil, err
@@ -196,18 +292,22 @@ UPDATE
 SET
     name = $2,
     parent = $3,
-    description = $4
+    description = $4,
+    slug=$5,
+    priority=$6
 WHERE
     id = $1
 RETURNING
-    id, name, description, parent, created_at
+    id, name, description, parent, slug, priority, created_at
 `
 
 type UpdateCategoryParams struct {
-	ID          pgtype.UUID `json:"id"`
-	Name        string      `json:"name"`
-	Parent      pgtype.UUID `json:"parent"`
-	Description pgtype.Text `json:"description"`
+	ID          pgtype.UUID    `json:"id"`
+	Name        string         `json:"name"`
+	Parent      pgtype.UUID    `json:"parent"`
+	Description pgtype.Text    `json:"description"`
+	Slug        pgtype.Text    `json:"slug"`
+	Priority    pgtype.Numeric `json:"priority"`
 }
 
 func (q *Queries) UpdateCategory(ctx context.Context, arg UpdateCategoryParams) (Category, error) {
@@ -216,6 +316,8 @@ func (q *Queries) UpdateCategory(ctx context.Context, arg UpdateCategoryParams) 
 		arg.Name,
 		arg.Parent,
 		arg.Description,
+		arg.Slug,
+		arg.Priority,
 	)
 	var i Category
 	err := row.Scan(
@@ -223,6 +325,8 @@ func (q *Queries) UpdateCategory(ctx context.Context, arg UpdateCategoryParams) 
 		&i.Name,
 		&i.Description,
 		&i.Parent,
+		&i.Slug,
+		&i.Priority,
 		&i.CreatedAt,
 	)
 	return i, err

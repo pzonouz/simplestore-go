@@ -2,16 +2,17 @@ package routes
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/url"
+	"strings"
+
+	"simple_store_go/internal/services"
+	"simple_store_go/utils"
 
 	"github.com/go-chi/chi/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 
-	sqlc "simplestore_go/internal/db"
-	"simplestore_go/internal/services"
-	"simplestore_go/utils"
+	sqlc "simple_store_go/internal/db"
 )
 
 func RegisterProductsRoutes(mux *chi.Mux, service services.Service) {
@@ -43,11 +44,8 @@ func RegisterProductsRoutes(mux *chi.Mux, service services.Service) {
 
 			rawSlug := r.PathValue("slug")
 
-			fmt.Println(rawSlug)
 			// chi may return an escaped value when RawPath is set.
 			slug, err := url.PathUnescape(rawSlug)
-			fmt.Println(slug)
-
 			if err != nil {
 				http.Error(w, "invalid slug encoding", http.StatusBadRequest)
 				return
@@ -63,6 +61,70 @@ func RegisterProductsRoutes(mux *chi.Mux, service services.Service) {
 			}
 
 			if err := json.NewEncoder(w).Encode(product); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.WriteHeader(http.StatusCreated)
+		})
+
+		r.Get("/category_products/by_slug/{slug}", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+
+			rawSlug := r.PathValue("slug")
+
+			// chi may return an escaped value when RawPath is set.
+			slug, err := url.PathUnescape(rawSlug)
+			if err != nil {
+				http.Error(w, "invalid slug encoding", http.StatusBadRequest)
+				return
+			}
+
+			product, err := service.ListProductsByCategoryBySlug(
+				r.Context(),
+				pgtype.Text{String: slug, Valid: true},
+			)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			if err := json.NewEncoder(w).Encode(product); err != nil {
+				http.Error(w, err.Error(), http.StatusInternalServerError)
+				return
+			}
+			w.WriteHeader(http.StatusCreated)
+		})
+
+		r.Get("/categories_products/by_slugs", func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
+			q, err := url.ParseQuery(r.URL.RawQuery)
+			if err != nil {
+				http.Error(w, "invalid query encoding", http.StatusBadRequest)
+				return
+			}
+
+			slugs := q["slug"]
+			if len(slugs) == 0 {
+				http.Error(w, "missing slug", http.StatusBadRequest)
+				return
+			}
+
+			for i, s := range slugs {
+				slugs[i] = strings.TrimSpace(s)
+				if slugs[i] == "" {
+					http.Error(w, "empty slug", http.StatusBadRequest)
+					return
+				}
+			}
+
+			products, err := service.ListProductsByCategoriesSlug(
+				r.Context(), slugs)
+			if err != nil {
+				http.Error(w, err.Error(), http.StatusBadRequest)
+				return
+			}
+
+			if err := json.NewEncoder(w).Encode(products); err != nil {
 				http.Error(w, err.Error(), http.StatusInternalServerError)
 				return
 			}

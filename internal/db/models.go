@@ -9,6 +9,7 @@ import (
 	"fmt"
 
 	"github.com/jackc/pgx/v5/pgtype"
+	"simple_store_go/myTypes"
 )
 
 type PackingType string
@@ -59,7 +60,13 @@ type Category struct {
 	Name        string             `json:"name"`
 	Description pgtype.Text        `json:"description"`
 	Parent      pgtype.UUID        `json:"parent"`
+	Slug        pgtype.Text        `json:"slug"`
+	Priority    pgtype.Numeric     `json:"priority"`
 	CreatedAt   pgtype.Timestamptz `json:"createdAt"`
+}
+
+type CategoryTreeView struct {
+	Tree []myTypes.ListCategoriesTreeRowDTO `json:"tree"`
 }
 
 type File struct {
@@ -81,6 +88,7 @@ type Product struct {
 	Price                   pgtype.Numeric     `json:"price"`
 	Count                   pgtype.Numeric     `json:"count"`
 	Discount                pgtype.Text        `json:"discount"`
+	IsService               pgtype.Bool        `json:"isService"`
 	CreatedAt               pgtype.Timestamptz `json:"createdAt"`
 }
 

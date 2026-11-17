@@ -3,7 +3,8 @@ package utils
 import (
 	"fmt"
 	"html"
-	sqlc "simplestore_go/internal/db"
+
+	sqlc "simple_store_go/internal/db"
 )
 
 func ActivationEmailBody(user sqlc.User, baseURL string) string {

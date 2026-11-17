@@ -70,6 +70,51 @@ ORDER BY
     c.name
 LIMIT $1 OFFSET $2;
 
+
+-- name: ListProductsByCategory :many
+SELECT
+    p.id,
+    p.name,
+    p.description,
+    p.category,
+    p.slug,
+    p.image_url,
+    p.count,
+    p.price,
+    p.packing_type,
+    p.packing_coefficient_types,
+    p.created_at,
+    c.name AS category_name
+FROM
+    products AS p
+    LEFT JOIN categories AS c ON p.category = c.id
+    WHERE c.slug=$1 
+	OR
+	(c.parent in (SELECT id FROM categories WHERE slug=$1))
+ORDER BY
+    c.name;
+    
+-- name: ListProductsByCategoroies :many
+SELECT
+    p.id,
+    p.name,
+    p.description,
+    p.category,
+    p.slug,
+    p.image_url,
+    p.count,
+    p.price,
+    p.packing_type,
+    p.packing_coefficient_types,
+    p.created_at,
+    c.name AS category_name
+FROM products AS p
+JOIN categories AS c ON p.category = c.id
+WHERE c.slug = ANY(sqlc.arg(slugs)::text[])
+   OR c.parent IN (
+        SELECT id FROM categories WHERE slug = ANY(sqlc.arg(slugs)::text[])
+      )
+ORDER BY c.name;
 -- name: CreateProduct :one
 INSERT INTO products(name, description, category, image_url, price, count, discount, slug, packing_type, packing_coefficient_types)
     VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
