@@ -76,7 +76,7 @@ RETURNS jsonb
 LANGUAGE sql
 STABLE
 AS $$
-    SELECT COALESCE(jsonb_agg(node ORDER BY c.priority ASC NULLS LAST), '[]'::jsonb)
+    SELECT COALESCE(jsonb_agg(node ORDER BY priority ASC NULLS LAST), '[]'::jsonb)
     FROM (
         SELECT jsonb_build_object(
                    'id',       c.id,
@@ -92,5 +92,4 @@ AS $$
     ) s;
 $$;
 
-CREATE OR REPLACE VIEW category_tree_view AS
-SELECT category_tree() AS tree;
+CREATE OR REPLACE VIEW category_tree_view AS SELECT category_tree() AS tree;
